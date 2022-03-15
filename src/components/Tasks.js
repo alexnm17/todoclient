@@ -72,8 +72,10 @@ class Tasks extends Component {
             console.log(error);
         }
     }
-    /*
-    handleUpdate = async (currentTask) => {
+
+    
+    
+    handleComplete = async (currentTask) => {
         const originalTasks = this.state.tasks;
         try {
             const tasks = [...originalTasks];
@@ -88,7 +90,7 @@ class Tasks extends Component {
             this.setState({ tasks: originalTasks });
             console.log(error);
         }
-    };*/
+    };
 
     handleDelete = async (currentTask) => {
         const originalTasks = this.state.tasks;
@@ -186,7 +188,7 @@ class Tasks extends Component {
                             >
                                 <Checkbox
                                     checked={task.completed}
-                                    onClick={() => this.handleUpdate(task._id)}
+                                    onClick={() => this.handleComplete(task._id)}
                                     color="primary"
                                 />
                                 <div
