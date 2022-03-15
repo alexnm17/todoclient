@@ -9,10 +9,6 @@ export function getTasks() {
     return axios.get(backendUrl);
 }
 
-export function getTasks(task_id) {
-    return axios.get(backendUrl+ "/" + task_id);
-}
-
 export function updateTask(task_id, task_info) {
     return axios.put(backendUrl+ "/" + task_id, task_info);
 }
