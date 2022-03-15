@@ -3,6 +3,8 @@ import { Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstra
 import { Paper,Button } from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
+import './Tasks.css';
+
 import {
     addTask,
     getTasks,
@@ -46,6 +48,10 @@ class Tasks extends Component {
         })
     }
 
+    sleep = (milliseconds) => {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+
     handleSubmit = async (e) => {
         e.preventDefault();
         try{
@@ -53,6 +59,7 @@ class Tasks extends Component {
             addTask(newtask);
             this.getAllTasks();
             this.hideModalAdd();
+            await this.sleep(500);
             window.location.reload(true);
             
         }catch (error) {
@@ -133,9 +140,15 @@ class Tasks extends Component {
 
     render() {
         var { taskname, priority, deadline } = this.state.taskform;
-        const { tasks } = this.state;
+        var { tasks } = this.state;
         return (
-            <div className="App flex">
+            <div>
+                <div className="top">
+                <a href="/proyects">
+				<Button color="primary">Proyects List</Button>
+			    </a>
+                </div>
+                <div className="App flex">
                 <Paper elevation={3} className="container">
                     <div className="heading">TO-DO</div>
                         <Button
@@ -253,6 +266,8 @@ class Tasks extends Component {
                         </ModalFooter>
                     </Modal>
             </div>
+            </div>    
+            
             
         );
     }
