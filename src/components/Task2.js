@@ -1,59 +1,66 @@
-import React, { useState, useEffect } from "react";
+import React, { Component } from "react";
 import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Tasks.css';
 import Header from './Header'
-import {getTasks} from "../services/apicalls.js"
 
 import {
     addTask,
+    getTasks,
     updateTask,
     deleteTask,
 } from "../services/taskServices";
 
-export default function Tasks(){
+class Tasks extends Component {
+    state = { 
+        tasks: [],
+        currentTask: "",
+        modalAdd: false,
+        modalUpdate: false,
+        taskform: {
+            taskname: "",
+            priority: "",
+            deadline: ""
+        }
+    };
 
-    const [tasks, setTasks] = useState(null);
-
-    const [taskname, setTaskname] = useState("");
-    const [priority, setPriority] = useState("");
-    const [deadline, setDeadline] = useState("");
-    const [taskid, setTaskid] = useState("");
-
-    const onTasknameChange = e => setTaskname(e.target.value);
-    const onPriorityChange = e => setPriority(e.target.value);
-    const onDeadlineChange = e => setDeadline(e.target.value);
-
-    const [modalCreate, setModalCreate] = useState(false);
-    const [modalUpdate, setModalUpdate] = useState(false);
-    
-
-    const getAllTasks = () => {
-        getTasks().then((tasks) => {
-          setTasks(tasks);
-          
-        });
-      }
-    
-      useEffect(() =>{
-        getAllTasks();
-        console.log(tasks);
-      },[]);
-
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    async componentDidMount() {
+        this.getAllTasks();
     }
 
 
+    async getAllTasks() {
+        try {
+            const { data } = await getTasks();
+            this.setState({ tasks: data });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
-    const createTask = () => {
+    handleChange = async e => {
+        await this.setState({
+            taskform: {
+                ...this.state.taskform,
+                [e.target.name]: e.target.value
+            }
+        })
+    }
+
+    sleep = (milliseconds) => {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+
+    handleSubmit = async (e) => {
+        e.preventDefault();
         try{
-            const data = {taskname, priority, deadline}
-            addTask(data);
-            getTasks();
-            setModalCreate(false);
+            var newtask = this.state.taskform;
+            addTask(newtask);
+            this.getAllTasks();
+            this.hideModalAdd();
+            await this.sleep(500);
             window.location.reload(true);
             
         }catch (error) {
@@ -62,14 +69,15 @@ export default function Tasks(){
             
     };
 
-    const handleUpdate= async () => {
+    handleUpdate = async (e) => {
+        e.preventDefault();
         try{
-            const data = {taskname, priority, deadline}
-            updateTask(taskid,data);
-            getTasks();
-            await sleep(500);
+            var newtask = this.state.taskform;
+            updateTask(newtask._id,newtask);
+            this.getAllTasks();
+            await this.sleep(500);
             window.location.reload(true);
-            setModalUpdate(false);
+            this.hideModalUpdate();
 
         }catch (error) {
             console.log(error);
@@ -78,22 +86,24 @@ export default function Tasks(){
 
     
     
-    const completeTask = async (currentTask) => {
+    handleComplete = async (currentTask) => {
+        const originalTasks = this.state.tasks;
         try {
-            const taskList = tasks;
-            const index = taskList.findIndex((task) => task._id === currentTask);
-            taskList[index] = { ...taskList[index] };
-            taskList[index].completed = !taskList[index].completed;
-            setTasks({ taskList });
+            const tasks = [...originalTasks];
+            const index = tasks.findIndex((task) => task._id === currentTask);
+            tasks[index] = { ...tasks[index] };
+            tasks[index].completed = !tasks[index].completed;
+            this.setState({ tasks });
             await updateTask(currentTask, {
-                completed: taskList[index].completed,
+                completed: tasks[index].completed,
             });
         } catch (error) {
+            this.setState({ tasks: originalTasks });
             console.log(error);
         }
     };
 
-    const handleDelete = async (currentTask) => {
+    handleDelete = async (currentTask) => {
         const originalTasks = this.state.tasks;
         try {
             const tasks = originalTasks.filter(
@@ -107,21 +117,46 @@ export default function Tasks(){
         }
     };
 
-    const showModalUpdate = (task) => {
-        setTaskname(task.taskname);
-        setPriority(task.priority);
-        setDeadline(task.deadline);
-        setTaskid(task._id);
-        
+    showModalAdd = () => {
+        this.setState({ modalAdd: true })
     }
-        
-    return tasks === null ? (
+
+    hideModalAdd = () => {
+        this.setState({ modalAdd: false })
+    }
+
+    showModalUpdate = (task) => {
+        this.setState({ modalUpdate: true, taskform: task })
+    }
+
+    hideModalUpdate = () => {
+        this.setState({ modalUpdate: false })
+    }
+
+    changeHandler = async e => {
+        await this.setState({
+            taskform: {
+                ...this.state.taskform,
+                [e.target.name]: e.target.value
+            }
+        })
+    }
+
+    render() {
+        var { taskname, priority, deadline } = this.state.taskform;
+        var { tasks } = this.state;
+        return (
             <div>
-                <h1>Loading...</h1>
-            </div>
-            ):(
-                <div>
-                    <Header/>
+                <Row>
+                    <Col>
+                        <Header/>
+                    </Col>
+                </Row>
+                <div className="top">
+                <a href="/proyects">
+				<Button color="primary">Projects List</Button>
+			    </a>
+                </div>
                 <div className="App flex">
                 <Paper elevation={3} className="container">
                     <div className="heading">Task List</div>
@@ -130,24 +165,24 @@ export default function Tasks(){
                             color="primary"
                             variant="outlined"
                             type="submit"
-                            onClick={(() =>setModalCreate(true))}
+                            onClick={() => this.showModalAdd()}
                         >
                             Add task
                         </Button>
 
 
-                    <Modal isOpen={modalCreate}>
+                    <Modal isOpen={this.state.modalAdd}>
                         <ModalHeader>
                             <div><h3>Add Task</h3></div>
                         </ModalHeader>
                         <ModalBody>
                             <FormGroup>
                                 <label>Name:</label>
-                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={onTasknameChange} value={taskname}></input>
+                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={this.changeHandler} value={taskname}></input>
                             </FormGroup>
                             <FormGroup>
                                 <label>Priority:</label>
-                                <select name="priority" onChange={onPriorityChange} value={priority} className="form-control">
+                                <select name="priority" onChange={this.changeHandler} value={priority} className="form-control">
                                     <option>Low</option>
                                     <option>Medium</option>
                                     <option>High</option>
@@ -155,13 +190,13 @@ export default function Tasks(){
                             </FormGroup>
                             <FormGroup>
                                 <label>Deadline:</label>
-                                <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                                <input className="form-control" type="date" name="deadline" onChange={this.changeHandler} value={deadline}></input>
                             </FormGroup>
                         </ModalBody>
 
                         <ModalFooter>
-                            <Button color="primary" onClick={createTask}>Accept</Button>
-                            <Button color="secondary" onClick={() =>setModalCreate(false)}>Cancel</Button>
+                            <Button color="primary" onClick={this.handleSubmit}>Accept</Button>
+                            <Button color="secondary" onClick={() => this.hideModalAdd()}>Cancel</Button>
                         </ModalFooter>
                     </Modal>
 
@@ -189,7 +224,7 @@ export default function Tasks(){
                                 </div>
                                 <div >
                                 <Button
-                                    onClick={() => showModalUpdate(task)}
+                                    onClick={() => this.showModalUpdate(task)}
                                     color="primary"
                                     
                                 >
@@ -198,7 +233,7 @@ export default function Tasks(){
                                 </div>
                                 <div>
                                 <Button
-                                    onClick={() => handleDelete}
+                                    onClick={() => this.handleDelete(task._id)}
                                     color="secondary"
                                     margin="60 px"
                                 >
@@ -211,18 +246,18 @@ export default function Tasks(){
                     </div>
                     
                 </Paper>
-                <Modal isOpen={modalUpdate}>
+                <Modal isOpen={this.state.modalUpdate}>
                         <ModalHeader>
                             <div><h3>Update Task</h3></div>
                         </ModalHeader>
                         <ModalBody>
                             <FormGroup>
                                 <label>Name:</label>
-                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={onTasknameChange} value={taskname}></input>
+                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={this.changeHandler} value={this.state.taskform.taskname}></input>
                             </FormGroup>
                             <FormGroup>
                                 <label>Priority:</label>
-                                <select name="priority" onChange={onPriorityChange} value={priority} className="form-control">
+                                <select name="priority" onChange={this.changeHandler} value={this.state.taskform.priority} className="form-control">
                                     <option>Low</option>
                                     <option>Medium</option>
                                     <option>High</option>
@@ -230,18 +265,21 @@ export default function Tasks(){
                             </FormGroup>
                             <FormGroup>
                                 <label>Deadline:</label>
-                                <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                                <input className="form-control" type="date" name="deadline" onChange={this.changeHandler} value={this.state.taskform.deadline}></input>
                             </FormGroup>
                         </ModalBody>
 
                         <ModalFooter>
-                            <Button color="primary" onClick={handleUpdate}>Accept</Button>
-                            <Button color="secondary" onClick={() => setModalUpdate(false)}>Cancel</Button>
+                            <Button color="primary" onClick={this.handleUpdate}>Accept</Button>
+                            <Button color="secondary" onClick={() => this.hideModalUpdate()}>Cancel</Button>
                         </ModalFooter>
                     </Modal>
             </div>
             </div>    
             
             
-    );
+        );
+    }
 }
+
+export default Tasks;
