@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import  { useNavigate }  from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Modal, ModalBody, FormGroup, ModalFooter, ModalHeader, Button } from 'reactstrap';
@@ -10,21 +10,27 @@ export default function Login(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
+    const [role, setRole] = useState("");
 
     const onEmailChange = e => setEmail(e.target.value);
     const onPasswordChange = e => setPassword(e.target.value);
     const onUsernameChange = e => setUsername(e.target.value);
-
+    const onRoleChange = e => setRole(e.target.value);
 
     //const [loginMessage, setLoginMessage] = useState(null);
-
     const [modalCreate, setModalCreate] = useState(false);
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        sessionStorage.setItem('userEmail', "");
+        sessionStorage.setItem('userName', "");
+        sessionStorage.setItem('userRole', "");
+      });
+
     const getUserByEmail = async (email) => {
         var data = await getUser(email);
-        return data.username;
+        return data;
     }
     
     const sleep = (milliseconds) => {
@@ -32,13 +38,14 @@ export default function Login(){
       }
 
     const loginHandler = async() => {
-        const user_name= await getUserByEmail(email);
+        const user_data= await getUserByEmail(email);
+        console.log(user_data);
         const data = {email, password}
         login(data)
             .then(res => {
-              console.log(user_name);
-              sessionStorage.setItem('userEmail', email);
-              sessionStorage.setItem('userName', user_name);
+              sessionStorage.setItem('userEmail', user_data.email);
+              sessionStorage.setItem('userName', user_data.username);
+              sessionStorage.setItem('userRole', user_data.role);
               navigate("/Tasks");
             }).catch(error => {
                 alert(error.message)
@@ -46,7 +53,7 @@ export default function Login(){
     }
 
     const createUser = () => {
-        const data = {email, password, username}
+        const data = {email, password, username, role}
         console.log(data);
         addNewUser(data)
             .then(res => {
@@ -95,6 +102,13 @@ export default function Login(){
                             <FormGroup>
                                 <label>Password:</label>
                                 <input className="form-control" placeholder="Password" type="password" name="password" onChange={onPasswordChange} value={password}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Role:</label>
+                                <select name="role" onChange={onRoleChange} placeholder="Select Role" value={role} className="form-control">
+                                    <option>User</option>
+                                    <option>Administrator</option>
+                                </select>
                             </FormGroup>
                         </ModalBody>
 

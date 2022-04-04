@@ -1,212 +1,167 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {
-    addProject,
-    getProjects,
-    updateProject,
-    deleteProject,
-    getProject
-} from "../services/projectServices";
+import {deleteProject, getProjects, addProject, getTasks, updateProject} from "../services/apicalls.js"
+import { getDateInStrFormat } from "../services/utils.js";
 
-import { 
-    getTask, getTasks
-}from "../services/taskServices";
 
-class projects extends Component {
-    state = { 
-        projects: [],
-        currentproject: null,
-        tasks: [],
-        currentproject: "",
-        modalAdd: false,
-        modalView: false,
-        projectform: {
-            projectname: ""
-            
-        },
-        taskform: {
-            taskname: "",
-            priority: "",
-            deadline: ""
-        },
-        projectupdate:{
-            projectname: "Nombre inicial",
-            tasks: []
-        }
-    };
+export default function Projects(){
+    
+    const [projects, setProjects] = useState(null);
+    const [usertasks, setUserTasks] = useState(null);
+    const [taskstoadd, setTasksToAdd] = useState([""]);
+    const [projecttasks, setProjectTasks] = useState([""]);
 
-    async componentDidMount() {
-        this.getAllprojects();
-    }
+    const [projectname, setProjectname] = useState("");
+    const [projectopen, setProjectOpen] = useState(null);
+    
+    const onProjectnameChange = e => setProjectname(e.target.value);
 
-    async getAllprojects() {
-        try {
-            const { data } = await getProjects();
-            this.setState({ projects: data });
-        } catch (error) {
-            console.log(error);
-        }
-    }
+    const [modalCreate, setModalCreate] = useState(false);
+    const [modalProject, setModalProject] = useState(false);
+    const [modalAddTask, setModalAddTask] = useState(false);
 
-    async getTask(id){
-        return await getTask(id)
-    }
-
-    getProjectTasks(projectid){
-        var project = getProject(projectid);
-        var tasksids = project[tasks]
-        var tasks = [];
-        for (var i = 0; i < tasksids.length; i++) {
-            tasks.push(getTasks(tasksids[i]));
-
-        }
-        return tasks;
-
-    }
-
-    handleChange = async e => {
-        await this.setState({
-            projectform: {
-                ...this.state.projectform,
-                [e.target.name]: e.target.value
+    const getAllProjects = () => {
+        var projectsByEmail = [];
+        getProjects().then((projects) => {
+            for(var i=0; i<projects.length; i++) {
+                if(projects[i].email === sessionStorage.getItem("userEmail")){
+                    projectsByEmail.push(projects[i]);
+                }
             }
-        })
+            setProjects(projectsByEmail);
+        });
     }
 
-    handleSubmit = async (e) => {
-        e.preventDefault();
+    const getUserTasks = () => {
+        var tasksByEmail = [];
+        getTasks().then((tasks) => {
+            for(var i=0; i<tasks.length; i++) {
+                if(tasks[i].email === sessionStorage.getItem("userEmail")){
+                    tasksByEmail.push(tasks[i]);
+                }
+            }
+            setUserTasks(tasksByEmail);
+        }); 
+    }
+
+    useEffect(() =>{
+        getAllProjects();
+        getUserTasks();
+      },[]);
+
+    const createProject = async () => {
         try{
-            var newproject = this.state.projectform;
-            await addProject(newproject);
-            this.getAllprojects();
-            /*await updateTask(currentTask, {
-                completed: tasks[index].completed,
-            });*/
-            this.hideModalAdd();
-            //window.location.reload(true);
-            
+            const email = sessionStorage.getItem('userEmail');
+            const data = {projectname, email};
+            console.log(data);
+            await addProject(data);
+            getAllProjects();
+            setModalCreate(false);
         }catch (error) {
             alert(error);
         }
             
     };
 
-    handleUpdate = async (e) => {
-        e.preventDefault();
-        try{
-            var newproject = this.state.projectform;
-            updateProject(newproject._id,newproject);
-            this.getAllprojects();
-            this.hidemodalView();
-        }catch (error) {
-            console.log(error);
-        }
-    }
-
-    handleDelete = async (currentProject) => {
-        const originalProjects = this.state.projects;
+    const handleDelete = async (project_id) => {
         try {
-            const projects = originalProjects.filter(
-                (project) => project._id !== currentProject
-            );
-            this.setState({ projects });
-            await deleteProject(currentProject);
+            await deleteProject(project_id);
+            getAllProjects();
         } catch (error) {
-            this.setState({ projects: originalProjects });
             console.log(error);
         }
     };
 
-    addTask= async(task) => {
+    const handleDeleteTask = async (task_id)=>{
+        var project = projectopen;
+        for(var i = 0; i < project.tasks.length; i++) {
+            if(project.tasks[i]===task_id){
+                project.tasks.splice(i, 1);
+            }     
+        }
+        const tasks = project.tasks;
+        console.log(tasks);
+        const data = {tasks};
+        await updateProject(project._id, data);
+        getAllProjects();
         
-        var newproject = this.state.projectform;
-        var addproject = await getProject(newproject._id);
-        var taskList=addproject.data.tasks;
-        taskList.push(task);
-        this.state.projectupdate["tasks"]=taskList;
-        console.log(this.state.projectupdate["tasks"]);
+    }
+
+    const handleAddTask= async (task_id) =>{
+        var project = projectopen;
+        project.tasks.push(task_id);
+        await updateProject(projectopen._id, project);
+        getAllProjects();
+        setModalAddTask(false);
         
-        await updateProject(newproject._id,this.state.projectupdate);
-        
-
     }
 
-    showModalAdd = () => {
-        this.setState({ modalAdd: true })
-    }
-
-    hideModalAdd = () => {
-        this.setState({ modalAdd: false })
-    }
-
-    showmodalView = (project) => {
-        this.setState({ modalView: true, projectform: project});
-    }
-
-    hidemodalView = () => {
-        this.setState({ modalView: false })
-    }
-
-    changeHandler = async e => {
-        await this.setState({
-            projectform: {
-                ...this.state.projectform,
-                [e.target.name]: e.target.value
+    const showModalProject = async (project) => {
+        setProjectname(project.projectname);
+        setProjectOpen(project);
+        var tasksids = project.tasks;
+        var projectTasks = [];
+        for(var i = 0; i < tasksids.length; i++) {
+            for(var j = 0; j < usertasks.length; j++){
+                if(tasksids[i] === usertasks[j]._id)
+                    projectTasks.push(usertasks[j]);
             }
-        })
+        }
+        setProjectTasks(projectTasks);
+        setModalProject(true);   
     }
 
-    changeAddHandler = async e => {
-        await this.setState({
-            taskform: {
-                ...this.state.taskform,
-                [e.target.name]: e.target.value
-            }
-        })
+    const showModalAddTask = () => {
+        console.log(projectopen);
+        setProjectname(projectopen.projectname);
+        var tasksids = projectopen.tasks;
+        var noRepeatedTasks = [];
+
+        for(var i = 0; i < usertasks.length; i++) {
+            if(!tasksids.includes(usertasks[i]._id))
+                noRepeatedTasks.push(usertasks[i]);
+        }
+        setTasksToAdd(noRepeatedTasks);
+        setModalAddTask(true);
+       
     }
 
-    render() {
-        var {projectname} = this.state.projectform;
-        var { taskname, priority, deadline } = this.state.taskform;
-        const { projects: projects } = this.state;
-
-        return (
-            <div>
-                <div className="top">
-                <a href="/">
-				<Button color="primary">Tasks List</Button>
-			    </a>
-                </div>
-            <div className="App flex">
-                <Paper elevation={3} className="container">
-                    <div className="heading">Projects List</div>
-                        <Button
-                            style={{ height: "40px" }}
-                            color="primary"
-                            variant="outlined"
-                            type="submit"
-                            onClick={() => this.showModalAdd()}
-                        >
-                            Add project
-                        </Button>
+    return projects === null || usertasks === null?(
+        <div>
+            <h1>Loading...</h1>
+         </div>
+        ):(
+        <div>
+                <div className="App flex">
+                    <Paper elevation={3} className="container">
+                        <div className="heading">Projects List</div>
+                            <Button
+                                style={{ height: "40px" }}
+                                color="primary"
+                                variant="outlined"
+                                type="submit"
+                                onClick={() => setModalCreate(true)}
+                            >
+                                Add project
+                            </Button>
 
 
-                    <Modal isOpen={this.state.modalAdd}>
+                    <Modal isOpen={modalCreate}>
                         <ModalHeader>
                             <div><h3>Add project</h3></div>
                         </ModalHeader>
                         <ModalBody>
                             <FormGroup>
                                 <label>Name:</label>
-                                <input className="form-control" placeholder="Name" type="text" name="projectname" onChange={this.changeHandler} value={projectname}></input>
+                                <input className="form-control" placeholder="Name" type="text" name="projectname" onChange={onProjectnameChange} value={projectname}></input>
                             </FormGroup>
                         </ModalBody>
 
                         <ModalFooter>
-                            <Button color="primary" onClick={this.handleSubmit}>Accept</Button>
-                            <Button color="secondary" onClick={() => this.hideModalAdd()}>Cancel</Button>
+                            <Button color="primary" onClick={createProject}>Accept</Button>
+                            <Button color="secondary" onClick={() => setModalCreate(false)}>Cancel</Button>
                         </ModalFooter>
                     </Modal>
 
@@ -221,10 +176,17 @@ class projects extends Component {
                                 <div className="task">
                                     {project.projectname}
                                 </div>
-                                
                                 <div>
                                 <Button
-                                    onClick={() => this.handleDelete(project._id)}
+                                    onClick={() => showModalProject(project)}
+                                    color="primary"
+                                >
+                                    info
+                                </Button>
+                                </div> 
+                                <div>
+                                <Button
+                                    onClick={() => handleDelete(project._id)}
                                     color="secondary"
                                 >
                                     delete
@@ -235,68 +197,87 @@ class projects extends Component {
                     </div>
                     
                 </Paper>
-                <Modal isOpen={this.state.modalView}>
-                        <ModalHeader>
-                            <div><h3>{projectname}</h3></div>
-                        </ModalHeader>
+                </div>
+                <Modal isOpen={modalProject}>
+                    <ModalHeader>
+                        <div><h3>{projectname}</h3></div>
+                    </ModalHeader>
 
-                        <ModalBody>
-                            <div className="flex">
-                                <Button
-                                color="primary"
-                                variant="outlined"
-                                type="submit"
-                                
-                                onClick={() => this.addTask(this.state.taskform)}
-                                >
-                            Add task
-                            </Button></div>
-                        
-                        <FormGroup>
-                                <label>Name:</label>
-                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={this.changeAddHandler} value={taskname}></input>
-                                <label>Priority:</label>
-                                <select name="priority" onChange={this.changeAddHandler} value={priority} className="form-control">
-                                    <option>Low</option>
-                                    <option>Medium</option>
-                                    <option>High</option>
-                                </select>
-                                <label>Deadline:</label>
-                                <input className="form-control" type="date" name="deadline" onChange={this.changeAddHandler} value={deadline}></input>
-                            </FormGroup>
-                        <table className="table" style={{ marginTop: 15, marginLeft: 15 }}>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Priority</th>
-                                    <th>Deadline</th>
-                                    <th></th>
+                    <ModalBody>
+                        <div className="flex">
+                            <Button
+                            color="primary"
+                            variant="outlined"
+                            type="submit"
+                            onClick={() => showModalAddTask()}
+                            >
+                        Add task
+                        </Button></div>
+                    
+                    
+                    <table className="table" style={{ marginTop: 15, marginLeft: 15 }}>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Priority</th>
+                                <th>Deadline</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {projecttasks.map(task =>
+                                <tr key={task._id}>
+                                    <td>{task.taskname}</td>
+                                    <td>{task.priority}</td>
+                                    <td>{getDateInStrFormat(new Date(task.deadline))}</td>
+                                    <td><button className="secondary" style={{ marginRight: 10 }} onClick={() => handleDeleteTask(task._id)}>Delete Task</button></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {this.state.tasks.map(task =>
-                                    <tr key={task._id}>
-                                        <td>{task}</td>
-                                        <td>{task.priority}</td>
-                                        <td>{task.deadline}</td>
-                                        <td>
-                                            <button className="secondary" id={task.idTask} style={{ marginRight: 10 }} onClick={() => this.showModalDelete(task)}>Delete Task</button>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                        </ModalBody>
+                            )}
+                        </tbody>
+                    </table>
+                    </ModalBody>
 
-                        <ModalFooter>
-                            <Button color="primary" onClick={this.handleUpdate}>Accept</Button>
-                            <Button color="secondary" onClick={() => this.hidemodalView()}>Cancel</Button>
-                        </ModalFooter>
-                    </Modal>
-            </div>
+                    <ModalFooter>
+                        <Button color="primary" >Accept</Button>
+                        <Button color="secondary" onClick={() => setModalProject(false)}>Cancel</Button>
+                    </ModalFooter>
+                </Modal>
+
+                <Modal isOpen={modalAddTask}>
+                    <ModalHeader>
+                        <div><h3>AddTask</h3></div>
+                    </ModalHeader>
+
+                    <ModalBody>
+                    <table className="table" style={{ marginTop: 15, marginLeft: 15 }}>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Priority</th>
+                                <th>Deadline</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {taskstoadd.map(task =>
+                                <tr key={task._id}>
+                                    <td>{task.taskname}</td>
+                                    <td>{task.priority}</td>
+                                    <td>{getDateInStrFormat(new Date(task.deadline))}</td>
+                                    <td><button className="primary" style={{ marginRight: 10 }} onClick={() => handleAddTask(task._id)}>Add Task</button></td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button color="primary" >Accept</Button>
+                        <Button color="secondary" onClick={() => setModalAddTask(false)}>Cancel</Button>
+                    </ModalFooter>
+                </Modal>
             </div>    
-        );
-    }
+    );
 }
 
-export default projects;
+

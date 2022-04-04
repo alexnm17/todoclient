@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
-import { Paper,Button } from "@material-ui/core";
+import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Tasks.css';
 import Header from './Header'
-import {getTasks} from "../services/apicalls.js"
+import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
 
-import {
-    addTask,
-    updateTask,
-    deleteTask,
-} from "../services/taskServices";
 
 export default function Tasks(){
 
@@ -31,31 +26,28 @@ export default function Tasks(){
     
 
     const getAllTasks = () => {
+        var tasksByEmail = [];
         getTasks().then((tasks) => {
-          setTasks(tasks);
-          
+            for(var i=0; i<tasks.length; i++) {
+                if(tasks[i].email === sessionStorage.getItem("userEmail")){
+                    tasksByEmail.push(tasks[i]);
+                }
+            }
+            setTasks(tasksByEmail);
         });
-      }
+    }
     
-      useEffect(() =>{
+    useEffect(() =>{
         getAllTasks();
-        console.log(tasks);
       },[]);
 
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
-    }
-
-
-
-    const createTask = () => {
+    const createTask = async () => {
         try{
-            const data = {taskname, priority, deadline}
-            addTask(data);
-            getTasks();
+            const email = sessionStorage.getItem('userEmail');
+            const data = {taskname, priority, deadline, email}
+            await addTask(data);
+            getAllTasks();
             setModalCreate(false);
-            window.location.reload(true);
-            
         }catch (error) {
             alert(error);
         }
@@ -65,10 +57,8 @@ export default function Tasks(){
     const handleUpdate= async () => {
         try{
             const data = {taskname, priority, deadline}
-            updateTask(taskid,data);
-            getTasks();
-            await sleep(500);
-            window.location.reload(true);
+            await updateTask(taskid,data);
+            getAllTasks();
             setModalUpdate(false);
 
         }catch (error) {
@@ -84,25 +74,22 @@ export default function Tasks(){
             const index = taskList.findIndex((task) => task._id === currentTask);
             taskList[index] = { ...taskList[index] };
             taskList[index].completed = !taskList[index].completed;
-            setTasks({ taskList });
+            
             await updateTask(currentTask, {
                 completed: taskList[index].completed,
             });
+            getAllTasks();
         } catch (error) {
             console.log(error);
         }
     };
 
-    const handleDelete = async (currentTask) => {
-        const originalTasks = this.state.tasks;
+    const handleDelete = async (task_id) =>{
         try {
-            const tasks = originalTasks.filter(
-                (task) => task._id !== currentTask
-            );
-            this.setState({ tasks });
-            await deleteTask(currentTask);
+            await deleteTask(task_id);
+            getAllTasks();
+            
         } catch (error) {
-            this.setState({ tasks: originalTasks });
             console.log(error);
         }
     };
@@ -112,6 +99,7 @@ export default function Tasks(){
         setPriority(task.priority);
         setDeadline(task.deadline);
         setTaskid(task._id);
+        setModalUpdate(true);
         
     }
         
@@ -124,7 +112,7 @@ export default function Tasks(){
                     <Header/>
                 <div className="App flex">
                 <Paper elevation={3} className="container">
-                    <div className="heading">Task List</div>
+                    <div className="heading flex">Task List</div>
                         <Button
                             style={{ height: "40px" }}
                             color="primary"
@@ -175,7 +163,7 @@ export default function Tasks(){
                             >
                                 <Checkbox
                                     checked={task.completed}
-                                    onClick={() => this.handleComplete(task._id)}
+                                    onClick={() => completeTask(task._id)}
                                     color="primary"
                                 />
                                 <div
@@ -198,7 +186,7 @@ export default function Tasks(){
                                 </div>
                                 <div>
                                 <Button
-                                    onClick={() => handleDelete}
+                                    onClick={() =>handleDelete(task._id)}
                                     color="secondary"
                                     margin="60 px"
                                 >
@@ -235,7 +223,7 @@ export default function Tasks(){
                         </ModalBody>
 
                         <ModalFooter>
-                            <Button color="primary" onClick={handleUpdate}>Accept</Button>
+                            <Button color="primary" onClick={() => handleUpdate()}>Accept</Button>
                             <Button color="secondary" onClick={() => setModalUpdate(false)}>Cancel</Button>
                         </ModalFooter>
                     </Modal>

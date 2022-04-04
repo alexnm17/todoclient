@@ -7,10 +7,10 @@ import { Collapse, Navbar, NavbarBrand, Nav, NavItem, NavLink, NavbarText } from
 export default function Header(){
 
   const navigate = useNavigate(); 
-
+  
 
     return (
-      <Navbar color="blue" expand="md">
+      <Navbar color="black" expand="md">
         <NavbarBrand><span className="text-white"><strong> TO DO LIST</strong></span></NavbarBrand>
         <Collapse navbar>
           <Nav className="me-auto" navbar>
