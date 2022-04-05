@@ -44,9 +44,10 @@ export default function Login(){
               sessionStorage.setItem('userRole', user_data.role);
               if(user_data.role==="User"){
                 navigate("/Tasks");
+                window.location.reload(true);
               }
               if(user_data.role==="Administrator"){
-                navigate("/AdminTasks");
+                window.location.reload(true);
               }
       
             }).catch(error => {

@@ -58,7 +58,7 @@ export default function TopBar() {
     <>
       <Nav>
         <NavLink to='/'>
-          TO DO LIST
+        <span className="text-white">{sessionStorage.getItem('userName') + " ("+sessionStorage.getItem('userRole')+")"} </span>
         </NavLink>
         <Bars onClick={() =>setModalNavigate(true)}/>
         <NavMenu>
