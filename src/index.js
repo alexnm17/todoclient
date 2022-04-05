@@ -14,7 +14,7 @@ import Users from './components/Users';
 
 function Routing() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <div>
         <Routes>
           <Route exact path="/" element={<Login/>} />

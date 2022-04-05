@@ -16,6 +16,9 @@ export default function Tasks(){
     const [priority, setPriority] = useState("");
     const [deadline, setDeadline] = useState("");
     const [taskid, setTaskid] = useState("");
+    const [onlyuncompleted, setOnlyUncompleted] = useState(false);
+    const [infotext, setInfoText] = useState("All");
+
 
     const onTasknameChange = e => setTaskname(e.target.value);
     const onPriorityChange = e => setPriority(e.target.value);
@@ -30,7 +33,13 @@ export default function Tasks(){
         getTasks().then((tasks) => {
             for(var i=0; i<tasks.length; i++) {
                 if(tasks[i].email === sessionStorage.getItem("userEmail")){
-                    tasksByEmail.push(tasks[i]);
+                    if(onlyuncompleted){
+                        if(!tasks[i].completed){
+                            tasksByEmail.push(tasks[i]);
+                        }
+                    }else{
+                        tasksByEmail.push(tasks[i]);
+                    }
                 }
             }
             setTasks(tasksByEmail);
@@ -100,7 +109,18 @@ export default function Tasks(){
         setDeadline(task.deadline);
         setTaskid(task._id);
         setModalUpdate(true);
-        
+    }
+
+    const switchView = () => {
+        const bool = !onlyuncompleted;
+        if(!bool){
+            setInfoText("Uncompleted")
+        }else{
+            setInfoText("All")
+        }
+        setOnlyUncompleted(bool);
+        getAllTasks();
+
     }
         
     return tasks === null ? (
@@ -116,7 +136,7 @@ export default function Tasks(){
                 </Row> 
                 <div className="App flex">
                 <Paper elevation={3} className="container">
-                    <div className="heading flex">Task List</div>
+                    <div className="heading flex">{infotext + " Tasks List"}</div>
                         <div className="flex">
                         <Button
                             style={{ height: "40px"}}
@@ -126,6 +146,15 @@ export default function Tasks(){
                             onClick={(() =>setModalCreate(true))}
                         >
                             Add task
+                        </Button>
+                        <Button
+                            style={{ height: "40px"}}
+                            color="primary"
+                            variant="outlined"
+                            type="submit"
+                            onClick={(() =>switchView())}
+                        >
+                            Switch View
                         </Button>
                         </div>
 
