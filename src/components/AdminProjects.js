@@ -1,45 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col,Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
+import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import {deleteProject, getProjects, addProject, getTasks, updateProject} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
-import TopBar from './TopBar';
+import TopBar from "./TopBar"
 
-export default function Projects(){
+
+
+export default function AdminProjects(){
     document.body.style.backgroundColor = "#66ff00";
 
     const [projects, setProjects] = useState(null);
-    const [usertasks, setUserTasks] = useState(null);
+    const [usertasks, setUserTasks] = useState([""]);
     const [taskstoadd, setTasksToAdd] = useState([""]);
     const [projecttasks, setProjectTasks] = useState([""]);
 
     const [projectname, setProjectname] = useState("");
     const [projectopen, setProjectOpen] = useState(null);
+    const [email, setEmail] = useState("");
     
     const onProjectnameChange = e => setProjectname(e.target.value);
+    const onEmailChange = e=> setEmail(e.target.value);
 
     const [modalCreate, setModalCreate] = useState(false);
     const [modalProject, setModalProject] = useState(false);
     const [modalAddTask, setModalAddTask] = useState(false);
 
     const getAllProjects = () => {
-        var projectsByEmail = [];
         getProjects().then((projects) => {
-            for(var i=0; i<projects.length; i++) {
-                if(projects[i].email === sessionStorage.getItem("userEmail")){
-                    projectsByEmail.push(projects[i]);
-                }
-            }
-            setProjects(projectsByEmail);
+            setProjects(projects);
         });
     }
 
-    const getUserTasks = () => {
+    const getUserTasks = (email) => {
         var tasksByEmail = [];
         getTasks().then((tasks) => {
             for(var i=0; i<tasks.length; i++) {
-                if(tasks[i].email === sessionStorage.getItem("userEmail")){
+                if(tasks[i].email === email){
                     tasksByEmail.push(tasks[i]);
                 }
             }
@@ -49,12 +47,10 @@ export default function Projects(){
 
     useEffect(() =>{
         getAllProjects();
-        getUserTasks();
       },[]);
 
     const createProject = async () => {
         try{
-            const email = sessionStorage.getItem('userEmail');
             const data = {projectname, email};
             console.log(data);
             await addProject(data);
@@ -101,7 +97,11 @@ export default function Projects(){
         
     }
 
-    const showModalProject = async (project) => {
+    const showModalProject =async  (project) => {
+        getUserTasks(project.email);
+        console.log(usertasks[0]);
+        if(usertasks === [''])
+            console.log(usertasks);
         setProjectname(project.projectname);
         setProjectOpen(project);
         var tasksids = project.tasks;
@@ -113,10 +113,11 @@ export default function Projects(){
             }
         }
         setProjectTasks(projectTasks);
-        setModalProject(true);   
+        setModalProject(true);
     }
 
     const showModalAddTask = () => {
+        console.log(projectopen);
         setProjectname(projectopen.projectname);
         var tasksids = projectopen.tasks;
         var noRepeatedTasks = [];
@@ -127,7 +128,6 @@ export default function Projects(){
         }
         setTasksToAdd(noRepeatedTasks);
         setModalAddTask(true);
-        setModalProject(false);
        
     }
 
@@ -145,7 +145,7 @@ export default function Projects(){
                 <div className="App flex">
                     <Paper elevation={3} className="container">
                         <div className="heading">Projects List</div>
-                        <div className="flex">
+                            <div className="flex">
                             <Button
                                 style={{ height: "40px" }}
                                 color="primary"
@@ -155,7 +155,7 @@ export default function Projects(){
                             >
                                 Add project
                             </Button>
-                        </div>
+                            </div>
 
                     <Modal isOpen={modalCreate}>
                         <ModalHeader>
@@ -165,6 +165,10 @@ export default function Projects(){
                             <FormGroup>
                                 <label>Name:</label>
                                 <input className="form-control" placeholder="Name" type="text" name="projectname" onChange={onProjectnameChange} value={projectname}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Email:</label>
+                                <input className="form-control" placeholder="Email" type="text" name="email" onChange={onEmailChange} value={email}></input>
                             </FormGroup>
                         </ModalBody>
 
@@ -183,7 +187,7 @@ export default function Projects(){
                                 className="flex task_container"
                             >
                                 <div className="task">
-                                    {project.projectname}
+                                    {project.projectname + " (" + project.email + ")"}
                                 </div>
                                 <div>
                                 <Button
@@ -239,7 +243,7 @@ export default function Projects(){
                                     <td>{task.taskname}</td>
                                     <td>{task.priority}</td>
                                     <td>{getDateInStrFormat(new Date(task.deadline))}</td>
-                                    <td><button className="secondary" style={{ marginRight: 10 }} onClick={() => handleDeleteTask(task._id)}>Delete Task</button></td>
+                                    <td><button className="secondary" style={{ marginRight: 10, backgroundColor:"red",borderRadius:"10px",color:"white",border:"none" }} onClick={() => handleDeleteTask(task._id)}>Delete Task</button></td>
                                 </tr>
                             )}
                         </tbody>
@@ -273,7 +277,7 @@ export default function Projects(){
                                     <td>{task.taskname}</td>
                                     <td>{task.priority}</td>
                                     <td>{getDateInStrFormat(new Date(task.deadline))}</td>
-                                    <td><button className="primary" style={{ marginRight: 10 }} onClick={() => handleAddTask(task._id)}>Add Task</button></td>
+                                    <td><button className="primary" style={{ marginRight: 10,backgroundColor:"blue",borderRadius:"10px",color:"white",border:"none"  }} onClick={() => handleAddTask(task._id)}>Add Task</button></td>
                                 </tr>
                             )}
                         </tbody>

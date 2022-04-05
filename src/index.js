@@ -5,19 +5,27 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Tasks from './components/Tasks';
 import Projects from './components/Projects';
-import App from './App'
+import Login from './components/Login';
+import AdminTasks from './components/AdminTasks';
+import AdminProjects from './components/AdminProjects';
+import Users from './components/Users';
+
 
 
 function Routing() {
   return (
-    <div align="center">
-      <Router>
+    <Router basename={process.env.PUBLIC_URL}>
+      <div>
         <Routes>
-          <Route exact path="/" element={<App/>} />
-          <Route exact path="/proyects" element={<Projects/>} />
+          <Route exact path="/" element={<Login/>} />
+          <Route path="/Tasks" element={<Tasks/>} />
+          <Route path="/AdminTasks" element={<AdminTasks/>} />
+          <Route path="/Projects" element={<Projects/>} />
+          <Route path="/AdminProjects" element={<AdminProjects/>} />
+          <Route path="/Users" element={<Users/>} />
         </Routes>
-      </Router>
-    </div>
+      </div>
+    </Router>
 
   )
 }
