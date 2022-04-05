@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:600|Work+Sans:400,500,600,700&display=swap');
 
 body{
-  background: rgb(34,193,195);
-  background: linear-gradient(135deg, rgba(34,193,195,1) 0%,     rgb(48, 206, 61) 100%);
   font-family: "work sans";
 }
 
@@ -71,7 +69,7 @@ html{
   color: rgba(187,187,187,0.9);
 }
 
-.row button{
+.button{
   border-radius: 25px;
   width: 80%;
   height: 40px;
@@ -87,6 +85,7 @@ html{
 
 .button1{
   border-radius: 25px;
+  width: 80%;
   background-color:white;
   border: 2px solid #e7e7e7;
   color: rgb(0, 0, 0);
@@ -96,7 +95,6 @@ html{
   display: inline-block;
   font-size: 16px;
   margin: 10px 2px;
-  margin-left: 40px;
   transition-duration: 0.4s;
   cursor: pointer;
 
@@ -118,6 +116,27 @@ html{
    text-align: center;
    padding-top: 2rem;
    margin-top: 1.5rem;
+}
+
+.heading {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 500px;
+  min-height: 300px;
+  padding: 10px;
 }
 
 

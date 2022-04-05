@@ -1,5 +1,7 @@
 export {
-    getDateInStrFormat
+    getDateInStrFormat,
+    getDateForDeadline2,
+    getDateForDeadline
   };
   
   /* Formatting date */
@@ -13,5 +15,19 @@ export {
                        monthNames[date.getMonth()]+" "+
                        date.getFullYear()
     return strformatted;
+  }
+
+  function getDateForDeadline(date){
+    var strformatted = date.getFullYear() + "-" +
+                       date.getMonth() + "-" +
+                       date.getDate()
+                       
+                       
+    return strformatted;
+  }
+
+  function getDateForDeadline2(date){
+    const defaultValue = new Date(date).toISOString().split('T')[0];
+    return defaultValue;
   }
   /* End formatting date */

@@ -3,13 +3,13 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import './Tasks.css';
-import Header from './Header'
+import TopBar from './TopBar'
 import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
 
 
-export default function Tasks(){
 
+export default function Tasks(){
+    document.body.style.backgroundColor= "#00f7ff";
     const [tasks, setTasks] = useState(null);
 
     const [taskname, setTaskname] = useState("");
@@ -109,12 +109,17 @@ export default function Tasks(){
             </div>
             ):(
                 <div>
-                    <Header/>
+                <TopBar/>
+                <Row>
+                    <Col>     
+                    </Col>
+                </Row> 
                 <div className="App flex">
                 <Paper elevation={3} className="container">
                     <div className="heading flex">Task List</div>
+                        <div className="flex">
                         <Button
-                            style={{ height: "40px" }}
+                            style={{ height: "40px"}}
                             color="primary"
                             variant="outlined"
                             type="submit"
@@ -122,6 +127,7 @@ export default function Tasks(){
                         >
                             Add task
                         </Button>
+                        </div>
 
 
                     <Modal isOpen={modalCreate}>

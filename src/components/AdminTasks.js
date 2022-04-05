@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
-import { Paper,Button } from "@material-ui/core";
+import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
+import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
+import { getDateForDeadline, getDateForDeadline2 } from "../services/utils.js";
+import TopBar from './TopBar'
 import './Tasks.css';
-import Header from './Header'
-import {getTasks} from "../services/apicalls.js"
 
-import {
-    addTask,
-    updateTask,
-    deleteTask,
-} from "../services/taskServices";
 
 export default function AdminTasks(){
+    document.body.style.backgroundColor = "#00f7ff";
 
     const [tasks, setTasks] = useState(null);
 
@@ -21,10 +18,12 @@ export default function AdminTasks(){
     const [priority, setPriority] = useState("");
     const [deadline, setDeadline] = useState("");
     const [taskid, setTaskid] = useState("");
+    const [email, setEmail] = useState("");
 
     const onTasknameChange = e => setTaskname(e.target.value);
     const onPriorityChange = e => setPriority(e.target.value);
     const onDeadlineChange = e => setDeadline(e.target.value);
+    const onEmailChange = e => setEmail(e.target.value);
 
     const [modalCreate, setModalCreate] = useState(false);
     const [modalUpdate, setModalUpdate] = useState(false);
@@ -32,29 +31,20 @@ export default function AdminTasks(){
 
     const getAllTasks = () => {
         getTasks().then((tasks) => {
-          setTasks(tasks);
+            setTasks(tasks);
         });
-      }
+    }
     
-      useEffect(() =>{
+    useEffect(() =>{
         getAllTasks();
-        console.log(tasks);
       },[]);
 
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
-    }
-
-
-
-    const createTask = () => {
+    const createTask = async () => {
         try{
-            const data = {taskname, priority, deadline}
-            addTask(data);
-            getTasks();
+            const data = {taskname, priority, deadline, email}
+            await addTask(data);
+            getAllTasks();
             setModalCreate(false);
-            window.location.reload(true);
-            
         }catch (error) {
             alert(error);
         }
@@ -64,10 +54,8 @@ export default function AdminTasks(){
     const handleUpdate= async () => {
         try{
             const data = {taskname, priority, deadline}
-            updateTask(taskid,data);
-            getTasks();
-            await sleep(500);
-            window.location.reload(true);
+            await updateTask(taskid,data);
+            getAllTasks();
             setModalUpdate(false);
 
         }catch (error) {
@@ -93,16 +81,12 @@ export default function AdminTasks(){
         }
     };
 
-    const handleDelete = async (currentTask) => {
-        const originalTasks = this.state.tasks;
+    const handleDelete = async (task_id) =>{
         try {
-            const tasks = originalTasks.filter(
-                (task) => task._id !== currentTask
-            );
-            this.setState({ tasks });
-            await deleteTask(currentTask);
+            await deleteTask(task_id);
+            getAllTasks();
+            
         } catch (error) {
-            this.setState({ tasks: originalTasks });
             console.log(error);
         }
     };
@@ -110,8 +94,9 @@ export default function AdminTasks(){
     const showModalUpdate = (task) => {
         setTaskname(task.taskname);
         setPriority(task.priority);
-        setDeadline(task.deadline);
-        console.log(deadline);
+        console.log(getDateForDeadline(new Date(task.deadline)));
+        setDeadline(getDateForDeadline2(new Date(task.deadline)));
+        setEmail(task.email);
         setTaskid(task._id);
         setModalUpdate(true);
         
@@ -123,10 +108,15 @@ export default function AdminTasks(){
             </div>
             ):(
                 <div>
-                    <Header/>
+                    <TopBar/>
+                    <Row>
+                        <Col>     
+                        </Col>
+                    </Row> 
                 <div className="App flex">
                 <Paper elevation={3} className="container">
-                    <div className="heading">Task List</div>
+                    <div className="heading flex">Task List</div>
+                    <div className="flex">
                         <Button
                             style={{ height: "40px" }}
                             color="primary"
@@ -136,7 +126,7 @@ export default function AdminTasks(){
                         >
                             Add task
                         </Button>
-
+                    </div>
 
                     <Modal isOpen={modalCreate}>
                         <ModalHeader>
@@ -158,6 +148,10 @@ export default function AdminTasks(){
                             <FormGroup>
                                 <label>Deadline:</label>
                                 <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Email:</label>
+                                <input className="form-control" type="text" name="deadline" onChange={onEmailChange} value={email}></input>
                             </FormGroup>
                         </ModalBody>
 
@@ -187,7 +181,7 @@ export default function AdminTasks(){
                                             : "task"
                                     }
                                 >
-                                    {task.taskname}
+                                    {task.taskname + " (" + task.email + ")" }
                                 </div>
                                 <div >
                                 <Button
@@ -200,7 +194,7 @@ export default function AdminTasks(){
                                 </div>
                                 <div>
                                 <Button
-                                    onClick={() => handleDelete}
+                                    onClick={() =>handleDelete(task._id)}
                                     color="secondary"
                                     margin="60 px"
                                 >
@@ -237,7 +231,7 @@ export default function AdminTasks(){
                         </ModalBody>
 
                         <ModalFooter>
-                            <Button color="primary" onClick={handleUpdate}>Accept</Button>
+                            <Button color="primary" onClick={() => handleUpdate()}>Accept</Button>
                             <Button color="secondary" onClick={() => setModalUpdate(false)}>Cancel</Button>
                         </ModalFooter>
                     </Modal>

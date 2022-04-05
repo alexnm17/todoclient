@@ -53,3 +53,15 @@ export function addNewUser(data){
 export function login(data){
     return API.post('/users/login',data).then(result => result.data);
 }
+
+export function getUsers(){
+    return API.get('/users/').then(result => result.data);
+}
+
+export function updateUser(user_id, data){
+    return API.put('/users/'+user_id, data).then(result => result)
+}
+
+export function deleteUser(iduser) {
+    return API.delete('/users/'+iduser).then(result => result.data);
+}

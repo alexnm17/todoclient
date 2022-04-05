@@ -5,8 +5,8 @@ import { Modal, ModalBody, FormGroup, ModalFooter, ModalHeader, Button } from 'r
 import './Login.css'
 import {addNewUser, login, getUser} from "../services/apicalls.js"
 
-export default function Login(){
-    
+export default function Login(){ 
+    document.body.style.background = "linear-gradient(135deg, rgba(34,193,195,1) 0%, rgb(48, 206, 61) 100%)";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
@@ -32,10 +32,6 @@ export default function Login(){
         var data = await getUser(email);
         return data;
     }
-    
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
-      }
 
     const loginHandler = async() => {
         const user_data= await getUserByEmail(email);
@@ -46,7 +42,13 @@ export default function Login(){
               sessionStorage.setItem('userEmail', user_data.email);
               sessionStorage.setItem('userName', user_data.username);
               sessionStorage.setItem('userRole', user_data.role);
-              navigate("/Tasks");
+              if(user_data.role==="User"){
+                navigate("/Tasks");
+              }
+              if(user_data.role==="Administrator"){
+                navigate("/AdminTasks");
+              }
+      
             }).catch(error => {
                 alert(error.message)
             })
@@ -78,10 +80,10 @@ export default function Login(){
                 <label>Password</label>
                 <input type="password" onChange={onPasswordChange} class="form-control" name="password" placeholder="Enter your Password" />
             </div> 
-            <div id="button" class="row">
-                <button onClick={loginHandler}>Login</button>
+            <div class="row">
+                <button class="button" onClick={loginHandler}>Login</button>
             </div>
-            <div> 
+            <div class="row"> 
                 <button class="button1" onClick={() => setModalCreate(true)}>Create new account</button>
             </div>
 
