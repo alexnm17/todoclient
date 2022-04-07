@@ -1,54 +1,63 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import  { useNavigate }  from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Modal, ModalBody, FormGroup, ModalFooter, ModalHeader, Button } from 'reactstrap';
 import './Login.css'
 import {addNewUser, login, getUser} from "../services/apicalls.js"
 
-export default function Login(){
-    
+export default function Login(){ 
+    document.body.style.background = "linear-gradient(135deg, rgba(34,193,195,1) 0%, rgb(48, 206, 61) 100%)";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
-    const [rol, setRol] =useState("");
+    const [role, setRole] = useState("User");
 
     const onEmailChange = e => setEmail(e.target.value);
     const onPasswordChange = e => setPassword(e.target.value);
     const onUsernameChange = e => setUsername(e.target.value);
-    const onRolChange = e => setRol(e.target.value);
-
+    const onRoleChange = e => setRole(e.target.value);
 
     //const [loginMessage, setLoginMessage] = useState(null);
-
     const [modalCreate, setModalCreate] = useState(false);
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        sessionStorage.setItem('userEmail', "");
+        sessionStorage.setItem('userName', "");
+        sessionStorage.setItem('userRole', "");
+      });
+
     const getUserByEmail = async (email) => {
         var data = await getUser(email);
-        return data.username;
+        return data;
     }
-    
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
-      }
 
     const loginHandler = async() => {
-        const user_name= await getUserByEmail(email);
+        const user_data= await getUserByEmail(email);
+        console.log(user_data);
         const data = {email, password}
         login(data)
             .then(res => {
-              console.log(user_name);
-              sessionStorage.setItem('userEmail', email);
-              sessionStorage.setItem('userName', user_name);
-              navigate("/Tasks");
+              sessionStorage.setItem('userEmail', user_data.email);
+              sessionStorage.setItem('userName', user_data.username);
+              sessionStorage.setItem('userRole', user_data.role);
+              if(user_data.role==="User"){
+                navigate("/Tasks");
+                window.location.reload(true);
+              }
+              if(user_data.role==="Administrator"){
+                navigate("/AdminTasks");
+                window.location.reload(true);
+              }
+      
             }).catch(error => {
                 alert(error.message)
             })
     }
 
     const createUser = () => {
-        const data = {email, password, username, rol}
+        const data = {email, password, username, role}
         console.log(data);
         addNewUser(data)
             .then(res => {
@@ -73,10 +82,10 @@ export default function Login(){
                 <label>Password</label>
                 <input type="password" onChange={onPasswordChange} class="form-control" name="password" placeholder="Enter your Password" />
             </div> 
-            <div id="button" class="row">
-                <button onClick={loginHandler}>Login</button>
+            <div class="row">
+                <button class="button" onClick={loginHandler}>Login</button>
             </div>
-            <div> 
+            <div class="row"> 
                 <button class="button1" onClick={() => setModalCreate(true)}>Create new account</button>
             </div>
 
@@ -97,14 +106,6 @@ export default function Login(){
                             <FormGroup>
                                 <label>Password:</label>
                                 <input className="form-control" placeholder="Password" type="password" name="password" onChange={onPasswordChange} value={password}></input>
-                            </FormGroup>
-                            <FormGroup>
-                                <label>Rol:</label>
-                                <select name="rol" onChange={onRolChange} value={rol} className="form-control">
-                                    <option>Admin</option>
-                                    <option>Client</option>
-                                    
-                                </select>
                             </FormGroup>
                         </ModalBody>
 

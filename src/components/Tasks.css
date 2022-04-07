@@ -1,3 +1,7 @@
+body{
+  font-family: "work sans";
+}
+
 .Task {
   width: 100vw;
   height: 100vh;
@@ -8,6 +12,9 @@
   font-size: 20px;
   font-weight: bold;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .flex {

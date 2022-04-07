@@ -3,46 +3,35 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import TopBar from './TopBar'
 import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
+import { getDateForDeadline, getDateForDeadline2 } from "../services/utils.js";
+import TopBar from './TopBar'
+import './Tasks.css';
 
 
+export default function AdminTasks(){
+    document.body.style.backgroundColor = "#00f7ff";
 
-export default function Tasks(){
-    document.body.style.backgroundColor= "#00f7ff";
     const [tasks, setTasks] = useState(null);
 
     const [taskname, setTaskname] = useState("");
     const [priority, setPriority] = useState("");
     const [deadline, setDeadline] = useState("");
     const [taskid, setTaskid] = useState("");
-    const [onlyuncompleted, setOnlyUncompleted] = useState(false);
-    const [infotext, setInfoText] = useState("All");
-
+    const [email, setEmail] = useState("");
 
     const onTasknameChange = e => setTaskname(e.target.value);
     const onPriorityChange = e => setPriority(e.target.value);
     const onDeadlineChange = e => setDeadline(e.target.value);
+    const onEmailChange = e => setEmail(e.target.value);
 
     const [modalCreate, setModalCreate] = useState(false);
     const [modalUpdate, setModalUpdate] = useState(false);
     
 
     const getAllTasks = () => {
-        var tasksByEmail = [];
         getTasks().then((tasks) => {
-            for(var i=0; i<tasks.length; i++) {
-                if(tasks[i].email === sessionStorage.getItem("userEmail")){
-                    if(onlyuncompleted){
-                        if(!tasks[i].completed){
-                            tasksByEmail.push(tasks[i]);
-                        }
-                    }else{
-                        tasksByEmail.push(tasks[i]);
-                    }
-                }
-            }
-            setTasks(tasksByEmail);
+            setTasks(tasks);
         });
     }
     
@@ -52,7 +41,6 @@ export default function Tasks(){
 
     const createTask = async () => {
         try{
-            const email = sessionStorage.getItem('userEmail');
             const data = {taskname, priority, deadline, email}
             await addTask(data);
             getAllTasks();
@@ -106,21 +94,12 @@ export default function Tasks(){
     const showModalUpdate = (task) => {
         setTaskname(task.taskname);
         setPriority(task.priority);
-        setDeadline(task.deadline);
+        console.log(getDateForDeadline(new Date(task.deadline)));
+        setDeadline(getDateForDeadline2(new Date(task.deadline)));
+        setEmail(task.email);
         setTaskid(task._id);
         setModalUpdate(true);
-    }
-
-    const switchView = () => {
-        const bool = !onlyuncompleted;
-        if(!bool){
-            setInfoText("Uncompleted")
-        }else{
-            setInfoText("All")
-        }
-        setOnlyUncompleted(bool);
-        getAllTasks();
-
+        
     }
         
     return tasks === null ? (
@@ -129,17 +108,17 @@ export default function Tasks(){
             </div>
             ):(
                 <div>
-                <TopBar/>
-                <Row>
-                    <Col>     
-                    </Col>
-                </Row> 
+                    <TopBar/>
+                    <Row>
+                        <Col>     
+                        </Col>
+                    </Row> 
                 <div className="App flex">
                 <Paper elevation={3} className="container">
-                    <div className="heading flex">{infotext + " Tasks List"}</div>
-                        <div className="flex">
+                    <div className="heading flex">Task List</div>
+                    <div className="flex">
                         <Button
-                            style={{ height: "40px"}}
+                            style={{ height: "40px" }}
                             color="primary"
                             variant="outlined"
                             type="submit"
@@ -147,17 +126,7 @@ export default function Tasks(){
                         >
                             Add task
                         </Button>
-                        <Button
-                            style={{ height: "40px"}}
-                            color="primary"
-                            variant="outlined"
-                            type="submit"
-                            onClick={(() =>switchView())}
-                        >
-                            Switch View
-                        </Button>
-                        </div>
-
+                    </div>
 
                     <Modal isOpen={modalCreate}>
                         <ModalHeader>
@@ -179,6 +148,10 @@ export default function Tasks(){
                             <FormGroup>
                                 <label>Deadline:</label>
                                 <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Email:</label>
+                                <input className="form-control" type="text" name="deadline" onChange={onEmailChange} value={email}></input>
                             </FormGroup>
                         </ModalBody>
 
@@ -208,7 +181,7 @@ export default function Tasks(){
                                             : "task"
                                     }
                                 >
-                                    {task.taskname}
+                                    {task.taskname + " (" + task.email + ")" }
                                 </div>
                                 <div >
                                 <Button
