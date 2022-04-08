@@ -12,7 +12,6 @@ export default function Login(){
     const [username, setUsername] = useState("");
     const [role, setRole] = useState("User");
 
-
     const onEmailChange = e => setEmail(e.target.value);
     const onPasswordChange = e => setPassword(e.target.value);
     const onUsernameChange = e => setUsername(e.target.value);

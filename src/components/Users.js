@@ -165,7 +165,7 @@ export default function Users(){
                                     onClick={() => showModalUpdate(user)}
                                     color="primary"
                                 >
-                                    edit
+                                    edit✏️
                                 </Button>
                                 </div>
                                 <div>
@@ -174,7 +174,7 @@ export default function Users(){
                                     color="secondary"
                                     margin="60 px"
                                 >
-                                    delete
+                                    🗑️
                                 </Button>
                                 </div>
                                
