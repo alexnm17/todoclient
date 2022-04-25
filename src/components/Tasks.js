@@ -54,11 +54,7 @@ export default function Tasks(){
         try{
             const email = sessionStorage.getItem('userEmail');
             const data = {taskname, priority, deadline, email}
-            await addTask(data)
-            const response=await{
-                headers:{ "auth-token":localStorage.getItem('token')}
-            }               
-            
+            await addTask(data);
             getAllTasks();
             setModalCreate(false);
         }catch (error) {
