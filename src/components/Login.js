@@ -20,6 +20,8 @@ export default function Login(){
     //const [loginMessage, setLoginMessage] = useState(null);
     const [modalCreate, setModalCreate] = useState(false);
 
+    const jwt = require('jose')
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,6 +44,7 @@ export default function Login(){
               sessionStorage.setItem('userEmail', user_data.email);
               sessionStorage.setItem('userName', user_data.username);
               sessionStorage.setItem('userRole', user_data.role);
+
               if(user_data.role==="User"){
                 navigate("/Tasks");
                 window.location.reload(true);
@@ -50,7 +53,10 @@ export default function Login(){
                 navigate("/AdminTasks");
                 window.location.reload(true);
               }
-      
+              const json= await response.json()
+              console.log(json)
+              localStorage.setItem('token', json.authtoken)
+              
             }).catch(error => {
                 alert(error.message)
             })
@@ -117,8 +123,3 @@ export default function Login(){
         </div>
       );
     }
-
-
-  
-
- 
