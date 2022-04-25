@@ -13,7 +13,7 @@ export default function Tasks(){
     const [tasks, setTasks] = useState(null);
 
     const [taskname, setTaskname] = useState("");
-    const [priority, setPriority] = useState("");
+    const [priority, setPriority] = useState("Low");
     const [deadline, setDeadline] = useState("");
     const [taskid, setTaskid] = useState("");
     const [onlyuncompleted, setOnlyUncompleted] = useState(false);
@@ -216,7 +216,7 @@ export default function Tasks(){
                                     color="primary"
                                     
                                 >
-                                    update
+                                    update✏️
                                 </Button>
                                 </div>
                                 <div>
@@ -225,7 +225,7 @@ export default function Tasks(){
                                     color="secondary"
                                     margin="60 px"
                                 >
-                                    delete
+                                    🗑️
                                 </Button>
                                 </div>
                                

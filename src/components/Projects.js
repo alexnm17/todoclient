@@ -190,7 +190,7 @@ export default function Projects(){
                                     onClick={() => showModalProject(project)}
                                     color="primary"
                                 >
-                                    info
+                                    🗂️
                                 </Button>
                                 </div> 
                                 <div>
@@ -198,7 +198,7 @@ export default function Projects(){
                                     onClick={() => handleDelete(project._id)}
                                     color="secondary"
                                 >
-                                    delete
+                                    🗑️ 
                                 </Button>
                                 </div>              
                             </Paper>

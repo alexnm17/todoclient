@@ -107,13 +107,6 @@ export default function Login(){
                                 <label>Password:</label>
                                 <input className="form-control" placeholder="Password" type="password" name="password" onChange={onPasswordChange} value={password}></input>
                             </FormGroup>
-                            <FormGroup>
-                                <label>Role:</label>
-                                <select name="role" onChange={onRoleChange} placeholder="Select Role" value={role} className="form-control">
-                                    <option>User</option>
-                                    <option>Administrator</option>
-                                </select>
-                            </FormGroup>
                         </ModalBody>
 
                         <ModalFooter>
