@@ -76,6 +76,24 @@ export default function TopBar() {
           <NavBtnLink to='/'>Log Out</NavBtnLink>
         </NavBtn>
       </Nav>
+      <Modal isOpen={modalNavigate}>
+        <ModalHeader>
+          <div><h3>Go To:</h3></div>
+        </ModalHeader>
+        <ModalBody>
+            <FormGroup>
+              <Button color="primary" onClick={() => navigate("/AdminTasks")}>Tasks</Button>
+              <Button color="primary" onClick={() => navigate("/AdminProjects")}>Projects</Button>
+              <Button color="primary" onClick={() => navigate("/Users")}>Projects</Button>
+            </FormGroup>
+            <FormGroup>
+              <Button color="danger" onClick={() => navigate("/")}>Log Out</Button>
+            </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+            <Button color="secondary" onClick={() => setModalNavigate(false)}>Cancel</Button>
+        </ModalFooter>
+      </Modal>
       
     </>
 

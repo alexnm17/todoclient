@@ -10,7 +10,7 @@ export default function Login(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
-    const [role, setRole] = useState("");
+    const [role, setRole] = useState("User");
 
     const onEmailChange = e => setEmail(e.target.value);
     const onPasswordChange = e => setPassword(e.target.value);
@@ -47,6 +47,7 @@ export default function Login(){
                 window.location.reload(true);
               }
               if(user_data.role==="Administrator"){
+                navigate("/AdminTasks");
                 window.location.reload(true);
               }
       
