@@ -3,7 +3,7 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Tasks.css';
-import TopBar from './TopBar'
+import TopBar from './bars/TopBar';
 import {getUsers,addNewUser, updateUser, deleteUser} from "../services/apicalls.js"
 
 

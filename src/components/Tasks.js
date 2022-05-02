@@ -3,7 +3,7 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import TopBar from './TopBar'
+import TopBar from './bars/TopBar';
 import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
 
 
@@ -62,7 +62,7 @@ export default function Tasks(){
         }
             
     };
-
+    
     const handleUpdate= async () => {
         try{
             const data = {taskname, priority, deadline}
@@ -75,8 +75,6 @@ export default function Tasks(){
         }
     }
 
-    
-    
     const completeTask = async (currentTask) => {
         try {
             const taskList = tasks;
@@ -216,7 +214,7 @@ export default function Tasks(){
                                     color="primary"
                                     
                                 >
-                                    update✏️
+                                    ✏️
                                 </Button>
                                 </div>
                                 <div>

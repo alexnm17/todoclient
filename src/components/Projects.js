@@ -4,7 +4,7 @@ import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import {deleteProject, getProjects, addProject, getTasks, updateProject} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
-import TopBar from './TopBar';
+import TopBar from './bars/TopBar';
 
 export default function Projects(){
     document.body.style.backgroundColor = "#66ff00";

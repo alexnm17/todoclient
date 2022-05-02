@@ -1,7 +1,5 @@
 import API from './api';
 
-
-
 /* TASKS CALLS */
 export function getTasks() {
     return API.get('/tasks').then(res => res.data);
@@ -39,6 +37,20 @@ export function addProject(data){
 export function updateProject(project_id, data){
     return API.put('/projects/'+project_id, data).then(result => result)
 }
+
+/* NOTIFICATION CALLS */
+export function getNotifications() {
+    return API.get('/notifications').then(res => res.data);
+}
+
+export function addNotification(data){
+    return API.post('/notifications',data).then(result => result.data);
+}
+
+export function deleteNotification(idnotification) {
+    return API.delete('/notifications/'+idnotification).then(result => result.data);
+}
+
 
 /* USER CALLS */
 export function getUser(email) {

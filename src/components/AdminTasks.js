@@ -5,7 +5,7 @@ import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
 import { getDateForDeadline, getDateForDeadline2 } from "../services/utils.js";
-import TopBar from './TopBar'
+import TopBar from './bars/TopBar'
 import './Tasks.css';
 
 
