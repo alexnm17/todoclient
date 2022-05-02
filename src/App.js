@@ -7,7 +7,8 @@ import Login from "./components/Login";
 import SignUp from "./components/Signup";
 
 function App() {
-  return (<Router>
+  return (
+  <Router>
     <div className="App">
       <nav className="navbar navbar-expand-lg navbar-light fixed-top">
         <div className="container">
@@ -34,7 +35,8 @@ function App() {
           </Routes>
         </div>
       </div>
-    </div></Router>
+    </div>
+  </Router>
   );
 }
 
