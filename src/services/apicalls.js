@@ -21,13 +21,21 @@ export function updateTask(task_id, data){
     return API.put('/tasks/'+task_id, data).then(result => result)
 }
 
+export function getTask(id){
+    return API.get('/tasks/'+id).then(res => res.data);
+}
+
 /* PROJECTS CALLS */
 export function getProjects() {
     return API.get('/projects').then(res => res.data);
 }
 
-export function deleteProject(idproject) {
-    return API.delete('/projects/'+idproject).then(result => result.data);
+export function getProject(id) {
+    return API.get('/projects/'+id).then(res => res.data);
+}
+
+export function deleteProject(id) {
+    return API.delete('/projects/'+id).then(result => result.data);
 }
 
 export function addProject(data){

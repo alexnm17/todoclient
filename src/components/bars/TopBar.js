@@ -1,14 +1,12 @@
 import React, { useState, useEffect} from 'react';
 import  {Button,Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
-import {
-  Nav,NavLink,Bars,NavMenu,NavBtn,NavBtnLink,NavText,SideBars,SidebarNav,SidebarWrap,NavIcon,SidebarLink
-} from './NavBarElements';
+import {Nav,NavLink,Bars,NavMenu,NavBtn,NavBtnLink,NavText,SideBars} from './NavBarElements';
 
 import  { useNavigate, Link }  from 'react-router-dom';
 import * as AiIcons from 'react-icons/ai';
 import { SidebarData } from './SidebarData';
 import './Sidebar.css';
-import {getUser, addNotification, updateUser, deleteNotification,getNotifications} from "../../services/apicalls.js"
+import {getUser, addNotification, updateUser, deleteNotification,getNotifications, getProject, updateProject} from "../../services/apicalls.js"
 
 
 export default function TopBar() {
@@ -19,22 +17,26 @@ export default function TopBar() {
   const showSidebar = () => setSidebar(!sidebar);
 
   const [modalFriends, setModalFriends] = useState(false);
-  const [modalNotifications, setModalNotifications] = useState(false);
+  const [modalFriendNotifications, setModalNotifications] = useState(false);
+  const [modalShareNotifications, setModalShareNotifications] = useState(false);
 
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [friend_notifications, setFriendNotifications] = useState([]);
+  const [share_notifications, setShareNotifications] = useState([]);
   const [email, setEmail] = useState("");
   const onEmailChange = e => setEmail(e.target.value);
 
   useEffect(() =>{
     getAllFriends(sessionStorage.getItem('userEmail'));
-    getAllNotifications(sessionStorage.getItem('userEmail'));
+    getAllFriendNotifications(sessionStorage.getItem('userEmail'));
+    getAllShareNotifications(sessionStorage.getItem('userEmail'));
   },[]);
 
   const reloadData=() =>{
     getAllFriends(sessionStorage.getItem('userEmail'));
-    getAllNotifications(sessionStorage.getItem('userEmail'));
+    getAllFriendNotifications(sessionStorage.getItem('userEmail'));
+    getAllShareNotifications(sessionStorage.getItem('userEmail'));
   }
   
 
@@ -51,27 +53,51 @@ export default function TopBar() {
     setFriends(userFriends);
 }
 
-const getAllNotifications = async (email) => {
+const getAllFriendNotifications = async (email) => {
   const allNotifications = await getNotifications();
   const userNotifications = [];
   
   for(var i=0; i<allNotifications.length; i++) {
-    if(allNotifications[i].receiver === email)
-      userNotifications.push(allNotifications[i]);
+    if(allNotifications[i].receiver === email){
+      if(allNotifications[i].type === 'friend')
+        userNotifications.push(allNotifications[i]);
     }
-    console.log(userNotifications);
-  setNotifications(userNotifications);
+ 
+    }
+  setFriendNotifications(userNotifications);
+
+}
+
+const getAllShareNotifications = async (email) => {
+  const allNotifications = await getNotifications();
+  const userNotifications = [];
+  
+  for(var i=0; i<allNotifications.length; i++) {
+    if(allNotifications[i].receiver === email){
+      if(allNotifications[i].type === 'Share')
+        userNotifications.push(allNotifications[i]);
+    }
+      
+    }
+  setShareNotifications(userNotifications);
 
 }
 
   const showModal = (name) => {
     if(name === 'Friends'){
       setModalNotifications(false);
+      setModalShareNotifications(true);
       setModalFriends(true);
     }
-    if(name === 'Notifications'){
+    if(name === 'Friend Requests'){
       setModalFriends(false);
+      setModalShareNotifications(false);
       setModalNotifications(true);
+    }
+    if(name === 'Sharing Notifications'){
+      setModalFriends(false);
+      setModalNotifications(false);
+      setModalShareNotifications(true);
     }
   }
 
@@ -155,9 +181,24 @@ const getAllNotifications = async (email) => {
           alert("You are already friends");
         }
         }else{
-          alert("You were friends");
+          alert("You are already friends");
         }
 
+    }catch (error) {
+        console.log(error);
+    }
+  }
+
+  const handleAddShare= async (email, project_id,notification_id) => {
+    try{
+      const project = await getProject(project_id);
+      const sharedTo = project.sharedTo;
+      sharedTo.push(email);
+      const data = {sharedTo};
+      await updateProject(project_id,data);
+      await deleteNotification(notification_id);
+      setModalShareNotifications(false);
+      setModalShareNotifications(true);
     }catch (error) {
         console.log(error);
     }
@@ -173,6 +214,7 @@ const getAllNotifications = async (email) => {
     return itcontains;
   }
   
+  
   return sessionStorage.getItem('userRole')==="User"?(
     <>
       <Nav>
@@ -187,6 +229,9 @@ const getAllNotifications = async (email) => {
           </NavLink>
           <NavLink to='/Projects' activeStyle>
             Projects
+          </NavLink>
+          <NavLink to='/SharedProjects' activeStyle>
+            Shared Projects
           </NavLink>
         </NavMenu>
         <NavBtn>
@@ -268,9 +313,9 @@ const getAllNotifications = async (email) => {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={modalNotifications}>
+      <Modal isOpen={modalFriendNotifications}>
         <ModalHeader>
-          <div><h3>Notifications</h3></div>
+          <div><h3>Friend Requests</h3></div>
         </ModalHeader>
         <ModalBody>
         <FormGroup>
@@ -278,16 +323,14 @@ const getAllNotifications = async (email) => {
             <thead>
               <tr>
                 <th>UserName</th>
-                <th>Type</th>
                 <th></th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {notifications.map(notification =>
+              {friend_notifications.map(notification =>
                   <tr key={notification._id}>
                       <td>{notification.sender}</td>
-                      <td>{notification.type}</td>
                       <td><button style={{ marginRight: 10 }} onClick={() => handleAddFriend(notification.sender, notification.receiver, notification._id)}>Yes</button></td>
                       <td><button style={{ marginRight: 10 }} onClick={() => handleDeleteNotification(notification._id)}>No</button></td>
                   </tr>
@@ -298,6 +341,39 @@ const getAllNotifications = async (email) => {
         </ModalBody>
         <ModalFooter>
             <Button color="danger" onClick={() => setModalNotifications(false)}>Cancel</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalShareNotifications}>
+        <ModalHeader>
+          <div><h3>Sharing Requests</h3></div>
+        </ModalHeader>
+        <ModalBody>
+        <FormGroup>
+          <table className="table" style={{ marginTop: 15, marginLeft: 15 }}>
+            <thead>
+              <tr>
+                <th>UserName</th>
+                <th>Project</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {share_notifications.map(notification =>
+                  <tr key={notification._id}>
+                      <td>{notification.sender}</td>
+                      <td>{notification.project_name}</td>
+                      <td><button style={{ marginRight: 10 }} onClick={() => handleAddShare(notification.receiver,notification.project_id,notification._id)}>Yes</button></td>
+                      <td><button style={{ marginRight: 10 }} onClick={() => handleDeleteNotification(notification._id)}>No</button></td>
+                  </tr>
+              )}
+          </tbody>
+          </table>
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+            <Button color="danger" onClick={() => setModalShareNotifications(false)}>Cancel</Button>
         </ModalFooter>
       </Modal>
       
