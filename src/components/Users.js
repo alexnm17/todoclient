@@ -3,7 +3,7 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Tasks.css';
-import TopBar from './bars/TopBar';
+import TopBar from './bars/AdminTopBar';
 import {getUsers,addNewUser, updateUser, deleteUser} from "../services/apicalls.js"
 
 
@@ -165,7 +165,7 @@ export default function Users(){
                                     onClick={() => showModalUpdate(user)}
                                     color="primary"
                                 >
-                                    edit✏️
+                                    ✏️
                                 </Button>
                                 </div>
                                 <div>
