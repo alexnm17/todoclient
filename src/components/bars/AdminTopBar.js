@@ -235,26 +235,26 @@ const getAllShareNotifications = async () => {
       <h1>Loading...</h1>
     </div>
     ):(
-    <>
+      <>
       <Nav>
         <SideBars onClick={showSidebar}/>
-        <NavText>
-          <span className="text-white">{user.username + " ("+user.role+")"} </span>
+        <NavText to='/'>
+        <span className="text-white">{user.username + " ("+user.role+")"} </span>
         </NavText>
         <Bars onClick={() =>setModalNavigate(true)}/>
         <NavMenu>
-          <NavLink to='/Tasks' activeStyle>
+          <NavLink to='/AdminTasks' activeStyle>
             Tasks
           </NavLink>
-          <NavLink to='/Projects' activeStyle>
+          <NavLink to='/AdminProjects' activeStyle>
             Projects
           </NavLink>
-          <NavLink to='/SharedProjects' activeStyle>
-            Shared Projects
+          <NavLink to='/Users' activeStyle>
+            Users
           </NavLink>
         </NavMenu>
         <NavBtn>
-          <NavBtnLink to='#' onClick={()=>logOut()}>Log Out</NavBtnLink>
+          <NavBtnLink to='/'>Log Out</NavBtnLink>
         </NavBtn>
       </Nav>
       <nav className={sidebar ? 'nav-menu active' : 'nav-menu'}>
@@ -276,16 +276,15 @@ const getAllShareNotifications = async () => {
             })}
           </ul>
         </nav>
-      
-
       <Modal isOpen={modalNavigate}>
         <ModalHeader>
           <div><h3>Go To:</h3></div>
         </ModalHeader>
         <ModalBody>
             <FormGroup>
-              <Button color="primary" onClick={() => navigate("/Tasks")}>Tasks</Button>
-              <Button color="primary" onClick={() => navigate("/Projects")}>Projects</Button>
+              <Button color="primary" onClick={() => navigate("/AdminTasks")}>Tasks</Button>
+              <Button color="primary" onClick={() => navigate("/AdminProjects")}>Projects</Button>
+              <Button color="primary" onClick={() => navigate("/Users")}>Projects</Button>
             </FormGroup>
             <FormGroup>
               <Button color="danger" onClick={() => navigate("/")}>Log Out</Button>
@@ -295,7 +294,6 @@ const getAllShareNotifications = async () => {
             <Button color="secondary" onClick={() => setModalNavigate(false)}>Cancel</Button>
         </ModalFooter>
       </Modal>
-
       <Modal isOpen={modalFriends}>
         <ModalHeader>
           <div><h3>Friends</h3></div>
@@ -331,7 +329,6 @@ const getAllShareNotifications = async () => {
             <Button color="danger" onClick={() => setModalFriends(false)}>Cancel</Button>
         </ModalFooter>
       </Modal>
-
       <Modal isOpen={modalFriendNotifications}>
         <ModalHeader>
           <div><h3>Friend Requests</h3></div>

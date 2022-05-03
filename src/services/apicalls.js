@@ -71,7 +71,7 @@ export function addNewUser(data){
 }
 
 export function login(data){
-    return API.post('/users/login',data).then(result => result.data);
+    return API.post('/sessions/login',data).then(result => result.data);
 }
 
 export function getUsers(){
@@ -84,4 +84,12 @@ export function updateUser(user_id, data){
 
 export function deleteUser(iduser) {
     return API.delete('/users/'+iduser).then(result => result.data);
+}
+
+/* SESSION CALLS */
+export function getSession(id) {
+    return API.get('/sessions/' + id).then(res => res.data);
+}
+export function deleteSession(id) {
+    return API.delete('/sessions/'+id).then(result => result.data);
 }

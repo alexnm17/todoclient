@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Row, Col,Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {deleteProject, getProjects,getProject, addProject, getTasks, updateProject, getUser,addNotification} from "../services/apicalls.js"
+import {deleteProject, getProjects,getProject, addProject, getTasks, updateProject, getUser,addNotification,getSession} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
 import TopBar from './bars/TopBar';
 import * as IoIcons from 'react-icons/io';
 import * as FcIcons from 'react-icons/fc';
+import * as AiIcons from 'react-icons/ai';
 
 export default function Projects(){
     document.body.style.backgroundColor = "#66ff00";
-
+    const [user, setUser] = useState(null);
     const [projects, setProjects] = useState(null);
     const [usertasks, setUserTasks] = useState(null);
     const [taskstoadd, setTasksToAdd] = useState([""]);
@@ -28,28 +29,33 @@ export default function Projects(){
     const [modalShared, setModalShared] = useState(false);
     const [modalShareTo, setModalShareTo] = useState(false);
 
-    const getAllProjects = () => {
+    const getAllProjects = async () => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
+        setUser(user);
         var projectsByEmail = [];
-        getProjects().then((projects) => {
+        const projects = await getProjects()
             for(var i=0; i<projects.length; i++) {
-                if(projects[i].email === sessionStorage.getItem("userEmail")){
+                if(projects[i].email === user.email){
                     projectsByEmail.push(projects[i]);
                 }
             }
             setProjects(projectsByEmail);
-        });
     }
 
-    const getUserTasks = () => {
+    const getUserTasks = async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
         var tasksByEmail = [];
-        getTasks().then((tasks) => {
+        const tasks = await getTasks()
             for(var i=0; i<tasks.length; i++) {
-                if(tasks[i].email === sessionStorage.getItem("userEmail")){
+                if(tasks[i].email === user.email){
                     tasksByEmail.push(tasks[i]);
                 }
             }
             setUserTasks(tasksByEmail);
-        }); 
     }
 
     useEffect(() =>{
@@ -59,7 +65,7 @@ export default function Projects(){
 
     const createProject = async () => {
         try{
-            const email = sessionStorage.getItem('userEmail');
+            const email = user.email;
             const data = {projectname, email};
             console.log(data);
             await addProject(data);
@@ -112,17 +118,21 @@ export default function Projects(){
     }
 
     const handleNotifySharing = async(email)=>{
-        const user = await getUser(sessionStorage.getItem("userEmail"));
-        const sender = user.email;
-        const receiver = email;
-        const type = "Share";
-        const project_id = projectopen._id;
-        const project_name = projectopen.projectname;
+        try{
+            const sender = user.email;
+            const receiver = email;
+            const type = "Share";
+            const project_id = projectopen._id;
+            const project_name = projectopen.projectname;
+            
+            const data = {sender, receiver, type, project_id, project_name};
+            console.log(data);
+            await addNotification(data);
+            setModalShareTo(false);
+        }catch(error) {
+            alert(error.response.data.err.message);
+        }
         
-        const data = {sender, receiver, type, project_id, project_name};
-
-        await addNotification(data);
-        setModalShareTo(false);
     }
 
     const handleAddTask= async (task_id)=>{
@@ -178,8 +188,7 @@ export default function Projects(){
        
     }
     const showModalShareTo = async (project_id) => {
-        const project = await getProject(project_id);
-        const user = await getUser(sessionStorage.getItem("userEmail"));
+        const project = await getProject(project_id);        
         setProjectOpen(project);
         const friends_emails= user.friends;
         const shared_emails = project.sharedTo;
@@ -194,7 +203,7 @@ export default function Projects(){
     }
 
     const contains = (array, email) =>{
-        const itcontains = false;
+        var itcontains = false;
         for(var i = 0; i < array.length; i++){
           if(email===array[i]){
             itcontains = true;
@@ -204,7 +213,7 @@ export default function Projects(){
       }
 
 
-    return projects === null || usertasks === null?(
+    return projects === null || usertasks === null||user===null?(
         <div>
             <h1>Loading...</h1>
          </div>
@@ -415,7 +424,7 @@ export default function Projects(){
                                 <tr key={user._id}>
                                     <td>{user.username}</td>
                                     <td>{user.email}</td>
-                                    <td><button color="primary" style={{ marginRight: 10 }} onClick={() => handleNotifySharing(user.email)}>Share</button></td>
+                                    <td><Button color="primary" style={{ marginRight: 10 }} onClick={() => handleNotifySharing(user.email)}><AiIcons.AiOutlineShareAlt/></Button></td>
                                 </tr>
                             )}
                         </tbody>

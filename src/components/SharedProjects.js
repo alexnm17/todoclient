@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {getTask, getProjects, addProject, getTasks, updateProject, getProject} from "../services/apicalls.js"
+import {getTask, getProjects, getTasks, updateProject, getProject, getUser,getSession} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
 import TopBar from "./bars/TopBar"
 import * as RiIcons from 'react-icons/ri';
@@ -11,7 +11,7 @@ import * as CgIcons from 'react-icons/cg';
 
 export default function SharedProjects(){
     document.body.style.backgroundColor = "#CD00FF";
-
+    const [user, setUser] = useState(null);
     const [projects, setProjects] = useState(null);
     const [usertasks, setUserTasks] = useState([""]);
     const [taskstoadd, setTasksToAdd] = useState([""]);
@@ -20,15 +20,17 @@ export default function SharedProjects(){
     const [projectname, setProjectname] = useState("");
     const [projectopen, setProjectOpen] = useState(null);
 
-
-    const [modalCreate, setModalCreate] = useState(false);
     const [modalProject, setModalProject] = useState(false);
     const [modalAddTask, setModalAddTask] = useState(false);
 
     const getAllProjects = async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
+        setUser(user);
         const allProjects = await getProjects();
         console.log(allProjects);
-        const user_email = sessionStorage.getItem("userEmail");
+        const user_email = user.email;
         const sharedProjects = [];
         for(var i = 0; i < allProjects.length; i++) {
             if(contains(allProjects[i].sharedTo,user_email))
@@ -38,7 +40,10 @@ export default function SharedProjects(){
         setProjects(sharedProjects);  
     }
 
-    const getUserTasks = (email) => {
+    const getUserTasks = async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
         var tasksByEmail = [];
         getTasks().then((tasks) => {
             for(var i=0; i<tasks.length; i++) {
@@ -53,12 +58,12 @@ export default function SharedProjects(){
 
     useEffect(() =>{
         getAllProjects();
-        getUserTasks(sessionStorage.getItem("userEmail"));
+        getUserTasks();
       },[]);
 
     const handleUnShare = async (project_id) => {
         try {
-            const user_email = sessionStorage.getItem("userEmail");
+            const user_email = user.email;
             const project = await getProject(project_id);
             const sharedTo = project.sharedTo;
             for(var i = 0; i <sharedTo.length; i++) {
