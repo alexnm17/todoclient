@@ -213,7 +213,8 @@ const getAllShareNotifications = async () => {
       await updateProject(project_id,data);
       await deleteNotification(notification_id);
       setModalShareNotifications(false);
-      setModalShareNotifications(true);
+      reloadData();
+      
     }catch (error) {
         console.log(error);
     }
