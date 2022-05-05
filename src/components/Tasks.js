@@ -3,15 +3,15 @@ import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 
 import { Paper, Button} from "@material-ui/core";
 import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import TopBar from './TopBar'
-import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
+import TopBar from './bars/TopBar';
+import {getTasks, deleteTask, addTask, updateTask,getSession, getUser} from "../services/apicalls.js"
 
 
 
 export default function Tasks(){
     document.body.style.backgroundColor= "#00f7ff";
     const [tasks, setTasks] = useState(null);
-
+    const [user, setUser] = useState(null);
     const [taskname, setTaskname] = useState("");
     const [priority, setPriority] = useState("Low");
     const [deadline, setDeadline] = useState("");
@@ -27,32 +27,34 @@ export default function Tasks(){
     const [modalCreate, setModalCreate] = useState(false);
     const [modalUpdate, setModalUpdate] = useState(false);
     
-
-    const getAllTasks = () => {
+    const getAllTasks =async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
+        setUser(user);
         var tasksByEmail = [];
-        getTasks().then((tasks) => {
-            for(var i=0; i<tasks.length; i++) {
-                if(tasks[i].email === sessionStorage.getItem("userEmail")){
-                    if(onlyuncompleted){
-                        if(!tasks[i].completed){
-                            tasksByEmail.push(tasks[i]);
-                        }
-                    }else{
+        const tasks = await getTasks()
+        for(var i=0; i<tasks.length; i++) {
+            if(tasks[i].email === user.email){
+                if(onlyuncompleted){
+                    if(!tasks[i].completed){
                         tasksByEmail.push(tasks[i]);
                     }
+                }else{
+                    tasksByEmail.push(tasks[i]);
                 }
             }
-            setTasks(tasksByEmail);
-        });
+        }
+        setTasks(tasksByEmail);
     }
     
-    useEffect(() =>{
+    useEffect(() =>{ 
         getAllTasks();
       },[]);
 
     const createTask = async () => {
         try{
-            const email = sessionStorage.getItem('userEmail');
+            const email = user.email;
             const data = {taskname, priority, deadline, email}
             await addTask(data);
             getAllTasks();
@@ -62,7 +64,7 @@ export default function Tasks(){
         }
             
     };
-
+    
     const handleUpdate= async () => {
         try{
             const data = {taskname, priority, deadline}
@@ -75,8 +77,6 @@ export default function Tasks(){
         }
     }
 
-    
-    
     const completeTask = async (currentTask) => {
         try {
             const taskList = tasks;
@@ -123,7 +123,7 @@ export default function Tasks(){
 
     }
         
-    return tasks === null ? (
+    return tasks === null || user===null? (
             <div>
                 <h1>Loading...</h1>
             </div>
@@ -216,7 +216,7 @@ export default function Tasks(){
                                     color="primary"
                                     
                                 >
-                                    update✏️
+                                    ✏️
                                 </Button>
                                 </div>
                                 <div>

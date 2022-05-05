@@ -5,7 +5,7 @@ import { Checkbox} from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
 import {getTasks, deleteTask, addTask, updateTask} from "../services/apicalls.js"
 import { getDateForDeadline, getDateForDeadline2 } from "../services/utils.js";
-import TopBar from './TopBar'
+import TopBar from './bars/AdminTopBar'
 import './Tasks.css';
 
 
@@ -189,7 +189,7 @@ export default function AdminTasks(){
                                     color="primary"
                                     
                                 >
-                                    update
+                                     ✏️
                                 </Button>
                                 </div>
                                 <div>
@@ -198,7 +198,7 @@ export default function AdminTasks(){
                                     color="secondary"
                                     margin="60 px"
                                 >
-                                    delete
+                                    🗑️
                                 </Button>
                                 </div>
                                

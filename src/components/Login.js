@@ -23,9 +23,7 @@ export default function Login(){
     const navigate = useNavigate();
 
     useEffect(() => {
-        sessionStorage.setItem('userEmail', "");
-        sessionStorage.setItem('userName', "");
-        sessionStorage.setItem('userRole', "");
+        sessionStorage.setItem('sessionToken', "");
       });
 
     const getUserByEmail = async (email) => {
@@ -35,13 +33,10 @@ export default function Login(){
 
     const loginHandler = async() => {
         const user_data= await getUserByEmail(email);
-        console.log(user_data);
-        const data = {email, password}
+        const data = {email, password, role:user_data.role}
         login(data)
             .then(res => {
-              sessionStorage.setItem('userEmail', user_data.email);
-              sessionStorage.setItem('userName', user_data.username);
-              sessionStorage.setItem('userRole', user_data.role);
+              sessionStorage.setItem('sessionToken', res._id);
               if(user_data.role==="User"){
                 navigate("/Tasks");
                 window.location.reload(true);

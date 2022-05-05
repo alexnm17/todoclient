@@ -9,7 +9,7 @@ import Login from './components/Login';
 import AdminTasks from './components/AdminTasks';
 import AdminProjects from './components/AdminProjects';
 import Users from './components/Users';
-
+import SharedProjects from './components/SharedProjects';
 
 
 function Routing() {
@@ -23,6 +23,7 @@ function Routing() {
           <Route path="/Projects" element={<Projects/>} />
           <Route path="/AdminProjects" element={<AdminProjects/>} />
           <Route path="/Users" element={<Users/>} />
+          <Route path="/SharedProjects" element={<SharedProjects/>} />
         </Routes>
       </div>
     </Router>

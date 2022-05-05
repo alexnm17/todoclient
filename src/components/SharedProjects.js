@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {deleteProject, getProjects, addProject, getTasks, updateProject} from "../services/apicalls.js"
+import {getTask, getProjects, getTasks, updateProject, getProject, getUser,getSession,  updateTask} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
-import TopBar from "./bars/AdminTopBar"
+import TopBar from "./bars/TopBar"
+import * as RiIcons from 'react-icons/ri';
+import * as CgIcons from 'react-icons/cg';
 
 
-
-export default function AdminProjects(){
-    document.body.style.backgroundColor = "#66ff00";
-
+export default function SharedProjects(){
+    document.body.style.backgroundColor = "#CD00FF";
+    const [user, setUser] = useState(null);
     const [projects, setProjects] = useState(null);
     const [usertasks, setUserTasks] = useState([""]);
     const [taskstoadd, setTasksToAdd] = useState([""]);
@@ -18,22 +19,41 @@ export default function AdminProjects(){
 
     const [projectname, setProjectname] = useState("");
     const [projectopen, setProjectOpen] = useState(null);
-    const [email, setEmail] = useState("");
-    
-    const onProjectnameChange = e => setProjectname(e.target.value);
-    const onEmailChange = e=> setEmail(e.target.value);
 
-    const [modalCreate, setModalCreate] = useState(false);
     const [modalProject, setModalProject] = useState(false);
     const [modalAddTask, setModalAddTask] = useState(false);
+    const [modalUpdate, setModalUpdate] = useState(false);
 
-    const getAllProjects = () => {
-        getProjects().then((projects) => {
-            setProjects(projects);
-        });
+    const [taskname, setTaskname] = useState("");
+    const [priority, setPriority] = useState("Low");
+    const [deadline, setDeadline] = useState("");
+    const [taskid, setTaskid] = useState("");
+
+    const onTasknameChange = e => setTaskname(e.target.value);
+    const onPriorityChange = e => setPriority(e.target.value);
+    const onDeadlineChange = e => setDeadline(e.target.value);
+
+    const getAllProjects = async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
+        setUser(user);
+        const allProjects = await getProjects();
+        console.log(allProjects);
+        const user_email = user.email;
+        const sharedProjects = [];
+        for(var i = 0; i < allProjects.length; i++) {
+            if(contains(allProjects[i].sharedTo,user_email))
+            sharedProjects.push(allProjects[i])
+        }
+        console.log(sharedProjects);
+        setProjects(sharedProjects);  
     }
 
-    const getUserTasks = (email) => {
+    const getUserTasks = async() => {
+        const session = await getSession(sessionStorage.getItem('sessionToken'));
+        const email = session.email;
+        const user = await getUser(email);
         var tasksByEmail = [];
         getTasks().then((tasks) => {
             for(var i=0; i<tasks.length; i++) {
@@ -41,35 +61,46 @@ export default function AdminProjects(){
                     tasksByEmail.push(tasks[i]);
                 }
             }
+            console.log(tasksByEmail)
             setUserTasks(tasksByEmail);
         }); 
     }
 
     useEffect(() =>{
         getAllProjects();
+        getUserTasks();
       },[]);
 
-    const createProject = async () => {
-        try{
-            const data = {projectname, email};
-            console.log(data);
-            await addProject(data);
-            getAllProjects();
-            setModalCreate(false);
-        }catch (error) {
-            alert(error);
-        }
-            
-    };
-
-    const handleDelete = async (project_id) => {
+    const handleUnShare = async (project_id) => {
         try {
-            await deleteProject(project_id);
+            const user_email = user.email;
+            const project = await getProject(project_id);
+            const sharedTo = project.sharedTo;
+            for(var i = 0; i <sharedTo.length; i++) {
+                if(sharedTo[i]===user_email){
+                    sharedTo.splice(i, 1);
+                }     
+            }
+            const data = {sharedTo};
+            await updateProject(project_id,data);
             getAllProjects();
+            
         } catch (error) {
             console.log(error);
         }
     };
+
+    const handleUpdate= async () => {
+        try{
+            const data = {taskname, priority, deadline}
+            await updateTask(taskid,data);
+            getAllProjects();
+            setModalUpdate(false);
+
+        }catch (error) {
+            console.log(error);
+        }
+    }
 
     const handleDeleteTask = async (task_id)=>{
         var project = projectopen;
@@ -97,29 +128,29 @@ export default function AdminProjects(){
         
     }
 
-    const showModalProject =async  (project) => {
-        getUserTasks(project.email);
-        console.log(usertasks[0]);
-        if(usertasks === [''])
-            console.log(usertasks);
+    const showModalProject =async(project) => {
         setProjectname(project.projectname);
         setProjectOpen(project);
         var tasksids = project.tasks;
+        console.log(tasksids);
         var projectTasks = [];
+        var task;
         for(var i = 0; i < tasksids.length; i++) {
-            for(var j = 0; j < usertasks.length; j++){
-                if(tasksids[i] === usertasks[j]._id)
-                    projectTasks.push(usertasks[j]);
-            }
+            task = await getTask(tasksids[i]);
+            projectTasks.push(task);  
         }
         setProjectTasks(projectTasks);
         setModalProject(true);
     }
 
-    const showModalAddTask = () => {
-        console.log(projectopen);
-        setProjectname(projectopen.projectname);
-        var tasksids = projectopen.tasks;
+    const showModalUpdate= (taskid) =>{
+        setTaskid(taskid);
+        setModalUpdate(true);
+    }
+
+    const showModalAddTask = (project) => {
+        setProjectOpen(project);
+        var tasksids = project.tasks;
         var noRepeatedTasks = [];
 
         for(var i = 0; i < usertasks.length; i++) {
@@ -130,6 +161,16 @@ export default function AdminProjects(){
         setModalAddTask(true);
        
     }
+
+    const contains = (array, email) =>{
+        var itcontains = false;
+        for(var i = 0; i < array.length; i++){
+          if(email===array[i]){
+            itcontains = true;
+          }
+        }
+        return itcontains;
+      }
 
     return projects === null || usertasks === null?(
         <div>
@@ -144,42 +185,7 @@ export default function AdminProjects(){
                 </Row> 
                 <div className="App flex">
                     <Paper elevation={3} className="container">
-                        <div className="heading">Projects List</div>
-                            <div className="flex">
-                            <Button
-                                style={{ height: "40px" }}
-                                color="primary"
-                                variant="outlined"
-                                type="submit"
-                                onClick={() => setModalCreate(true)}
-                            >
-                                Add project
-                            </Button>
-                            </div>
-
-                    <Modal isOpen={modalCreate}>
-                        <ModalHeader>
-                            <div><h3>Add project</h3></div>
-                        </ModalHeader>
-                        <ModalBody>
-                            <FormGroup>
-                                <label>Name:</label>
-                                <input className="form-control" placeholder="Name" type="text" name="projectname" onChange={onProjectnameChange} value={projectname}></input>
-                            </FormGroup>
-                            <FormGroup>
-                                <label>Email:</label>
-                                <input className="form-control" placeholder="Email" type="text" name="email" onChange={onEmailChange} value={email}></input>
-                            </FormGroup>
-                        </ModalBody>
-
-                        <ModalFooter>
-                            <Button color="primary" onClick={createProject}>Accept</Button>
-                            <Button color="secondary" onClick={() => setModalCreate(false)}>Cancel</Button>
-                        </ModalFooter>
-                    </Modal>
-
-
-                    
+                    <div className="heading">Projects Shared</div>
                     <div>
                         {projects.map((project) => (
                             <Paper
@@ -199,10 +205,18 @@ export default function AdminProjects(){
                                 </div> 
                                 <div>
                                 <Button
-                                    onClick={() => handleDelete(project._id)}
+                                    onClick={() => showModalAddTask(project)}
+                                    color="primary"
+                                >
+                                    <CgIcons.CgAddR/>
+                                </Button>
+                                </div> 
+                                <div>
+                                <Button
+                                    onClick={() => handleUnShare(project._id)}
                                     color="secondary"
                                 >
-                                    🗑️
+                                    <RiIcons.RiUserUnfollowFill/>
                                 </Button>
                                 </div>              
                             </Paper>
@@ -222,7 +236,7 @@ export default function AdminProjects(){
                             color="primary"
                             variant="outlined"
                             type="submit"
-                            onClick={() => showModalAddTask()}
+                            onClick={() => showModalAddTask(projectopen)}
                             >
                         Add task
                         </Button></div>
@@ -232,8 +246,8 @@ export default function AdminProjects(){
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Priority</th>
-                                <th>Deadline</th>
+                                <th>User</th>
+                                <th></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -241,8 +255,8 @@ export default function AdminProjects(){
                             {projecttasks.map(task =>
                                 <tr key={task._id}>
                                     <td>{task.taskname}</td>
-                                    <td>{task.priority}</td>
-                                    <td>{getDateInStrFormat(new Date(task.deadline))}</td>
+                                    <td>{task.email}</td>
+                                    <td><button className="secondary" style={{ marginRight: 10,backgroundColor:"blue",borderRadius:"10px",color:"white",border:"none"  }} onClick={() => showModalUpdate(task._id)}>Edit Task</button></td>
                                     <td><button className="secondary" style={{ marginRight: 10, backgroundColor:"red",borderRadius:"10px",color:"white",border:"none" }} onClick={() => handleDeleteTask(task._id)}>Delete Task</button></td>
                                 </tr>
                             )}
@@ -289,6 +303,35 @@ export default function AdminProjects(){
                         <Button color="secondary" onClick={() => setModalAddTask(false)}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
+
+                <Modal isOpen={modalUpdate}>
+                        <ModalHeader>
+                            <div><h3>Update Task</h3></div>
+                        </ModalHeader>
+                        <ModalBody>
+                            <FormGroup>
+                                <label>Name:</label>
+                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={onTasknameChange} value={taskname}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Priority:</label>
+                                <select name="priority" onChange={onPriorityChange} value={priority} className="form-control">
+                                    <option>Low</option>
+                                    <option>Medium</option>
+                                    <option>High</option>
+                                </select>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Deadline:</label>
+                                <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                            </FormGroup>
+                        </ModalBody>
+
+                        <ModalFooter>
+                            <Button color="primary" onClick={() => handleUpdate()}>Accept</Button>
+                            <Button color="secondary" onClick={() => setModalUpdate(false)}>Cancel</Button>
+                        </ModalFooter>
+                    </Modal>
             </div>    
     );
 }
