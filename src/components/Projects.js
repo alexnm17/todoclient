@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col,Modal, ModalBody, FormGroup, ModalFooter, ModalHeader } from 'reactstrap';
 import { Paper,Button } from "@material-ui/core";
 import 'bootstrap/dist/css/bootstrap.min.css'
-import {deleteProject, getProjects,getProject, addProject, getTasks, updateProject, getUser,addNotification,getSession} from "../services/apicalls.js"
+import {deleteProject, getProjects,getProject, addProject, getTasks, updateProject, getUser,addNotification,getSession, getTask, updateTask} from "../services/apicalls.js"
 import { getDateInStrFormat } from "../services/utils.js";
 import TopBar from './bars/TopBar';
 import * as IoIcons from 'react-icons/io';
@@ -28,6 +28,16 @@ export default function Projects(){
     const [modalAddTask, setModalAddTask] = useState(false);
     const [modalShared, setModalShared] = useState(false);
     const [modalShareTo, setModalShareTo] = useState(false);
+    const [modalUpdate, setModalUpdate] = useState(false);
+
+    const [taskname, setTaskname] = useState("");
+    const [priority, setPriority] = useState("Low");
+    const [deadline, setDeadline] = useState("");
+    const [taskid, setTaskid] = useState("");
+
+    const onTasknameChange = e => setTaskname(e.target.value);
+    const onPriorityChange = e => setPriority(e.target.value);
+    const onDeadlineChange = e => setDeadline(e.target.value);
 
     const getAllProjects = async () => {
         const session = await getSession(sessionStorage.getItem('sessionToken'));
@@ -144,6 +154,17 @@ export default function Projects(){
         showModalProject(project);
         
     }
+    const handleUpdate= async () => {
+        try{
+            const data = {taskname, priority, deadline}
+            await updateTask(taskid,data);
+            getAllProjects();
+            setModalUpdate(false);
+
+        }catch (error) {
+            console.log(error);
+        }
+    }
 
     const showModalProject = async (project) => {
         setProjectname(project.projectname);
@@ -151,10 +172,9 @@ export default function Projects(){
         var tasksids = project.tasks;
         var projectTasks = [];
         for(var i = 0; i < tasksids.length; i++) {
-            for(var j = 0; j < usertasks.length; j++){
-                if(tasksids[i] === usertasks[j]._id)
-                    projectTasks.push(usertasks[j]);
-            }
+            var task = await getTask(tasksids[i]);
+            projectTasks.push(task);
+            
         }
         setProjectTasks(projectTasks);
         setModalProject(true);   
@@ -200,6 +220,11 @@ export default function Projects(){
         setSharedTo(usersToShare);
         setModalShareTo(true);
        
+    }
+
+    const showModalUpdate= (taskid) =>{
+        setTaskid(taskid);
+        setModalUpdate(true);
     }
 
     const contains = (array, email) =>{
@@ -270,7 +295,7 @@ export default function Projects(){
                                 >
                                     🗂️
                                 </Button>
-                                </div> 
+                                </div>  
                                 <div>
                                 <Button
                                     onClick={() => showModalShared(project._id)}
@@ -322,8 +347,8 @@ export default function Projects(){
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Priority</th>
-                                <th>Deadline</th>
+                                <th>User</th>
+                                <th></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -331,8 +356,8 @@ export default function Projects(){
                             {projecttasks.map(task =>
                                 <tr key={task._id}>
                                     <td>{task.taskname}</td>
-                                    <td>{task.priority}</td>
-                                    <td>{getDateInStrFormat(new Date(task.deadline))}</td>
+                                    <td>{task.email}</td>
+                                    <td><button className="secondary" style={{ marginRight: 10 }} onClick={() => showModalUpdate(task._id)}>Edit Task</button></td>
                                     <td><button className="secondary" style={{ marginRight: 10 }} onClick={() => handleDeleteTask(task._id)}>Delete Task</button></td>
                                 </tr>
                             )}
@@ -434,6 +459,35 @@ export default function Projects(){
                         <Button color="secondary" onClick={() => setModalShareTo(false)}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
+
+                <Modal isOpen={modalUpdate}>
+                        <ModalHeader>
+                            <div><h3>Update Task</h3></div>
+                        </ModalHeader>
+                        <ModalBody>
+                            <FormGroup>
+                                <label>Name:</label>
+                                <input className="form-control" placeholder="Name" type="text" name="taskname" onChange={onTasknameChange} value={taskname}></input>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Priority:</label>
+                                <select name="priority" onChange={onPriorityChange} value={priority} className="form-control">
+                                    <option>Low</option>
+                                    <option>Medium</option>
+                                    <option>High</option>
+                                </select>
+                            </FormGroup>
+                            <FormGroup>
+                                <label>Deadline:</label>
+                                <input className="form-control" type="date" name="deadline" onChange={onDeadlineChange} value={deadline}></input>
+                            </FormGroup>
+                        </ModalBody>
+
+                        <ModalFooter>
+                            <Button color="primary" onClick={() => handleUpdate()}>Accept</Button>
+                            <Button color="secondary" onClick={() => setModalUpdate(false)}>Cancel</Button>
+                        </ModalFooter>
+                    </Modal>
             </div>    
     );
 }
